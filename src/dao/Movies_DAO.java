@@ -28,7 +28,7 @@ public class Movies_DAO {
     public boolean addMovie(Movies movies){
         String checksql = "SELECT COUNT(*) FROM Movies WHERE title=? AND director=? AND releaseDate=?";
       try(PreparedStatement checkSmt = con.prepareStatement(checksql)  ){
-        checkSmt.setString(1,movies.getTile());
+        checkSmt.setString(1,movies.getTitle());
         checkSmt.setString(2,movies.getDirector());
         checkSmt.setString(3,Timestamp.valueOf(movies.getReleaseDate()));
         ResultSet rs = checkSmt.executeQuery();

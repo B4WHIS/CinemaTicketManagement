@@ -37,7 +37,7 @@ public class Rooms_DAO {
 
     String sql = "INSERT INTO Rooms (roomID,roomName, capacity, type) VALUES (?,?, ?, ?)";
     try (PreparedStatement stmt = con.prepareStatement(sql)) {
-        stmt.setString(11, room.getRoomIDID());
+        stmt.setString(11, room.getRoomID());
         stmt.setString(2, room.getRoomName());
         stmt.setInt(3, room.getCapacity());
         stmt.setString(4, room.getType());
@@ -109,7 +109,7 @@ public Rooms getRoomByID(int id) {
             int capacity = rs.getInt("capacity");
             String type = rs.getString("type");
 
-            return new Roomss(roomID, roomName, capacity, type);
+            return new Rooms(roomID, roomName, capacity, type);
         }
     } catch (SQLException e) {
         e.printStackTrace();
@@ -121,7 +121,7 @@ public List<Rooms> getAllRooms() {
     List<Rooms> rooms = new ArrayList<>();
     String sql = "SELECT * FROM Rooms";
 
-    try (PreparedStatement stmt = conn.prepareStatement(sql);
+    try (PreparedStatement stmt = con.prepareStatement(sql);
          ResultSet rs = stmt.executeQuery()) {
 
         while (rs.next()) {
@@ -129,7 +129,7 @@ public List<Rooms> getAllRooms() {
             String name = rs.getString("name");
             int capacity = rs.getInt("capacity");
 
-            Room room = new Room(roomID, name, capacity);
+            Rooms room = new Rooms(roomID, name, capacity);
             rooms.add(room);
         }
 
