@@ -4,7 +4,10 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
+import com.microsoft.sqlserver.jdbc.SQLServerConnection;
+
 import dao.Movies_DAO;
+import model.Movies;
 
 public class MovieManager {
     private Movies_DAO movieDAO;
@@ -18,20 +21,12 @@ public class MovieManager {
         }
     }
 
-    public boolean addMovie(Movies movie) {
-        try {
-            return movieDAO.addMovie(movie);
-        } catch (SQLException e) {
-            return false;
-        }
+    public boolean addMovie(Movies movie) throws SQLException {
+        return movieDAO.addMovie(movie);
     }
 
-    public boolean updateMovie(Movies movie) {
-        try {
-            return movieDAO.updateMovie(movie);
-        } catch (SQLException e) {
-            return false;
-        }
+    public boolean updateMovie(Movies movie) throws SQLException {
+        return movieDAO.updateMovie(movie);
     }
 
     public boolean deleteMovie(int movieID) {

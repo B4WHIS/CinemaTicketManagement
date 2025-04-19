@@ -3,7 +3,10 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
+import com.microsoft.sqlserver.jdbc.SQLServerConnection;
+
 import dao.Showtimes_DAO;
+import model.Showtimes;
 public class ShowTimeManager {
     private Showtimes_DAO showtimeDAO;
 

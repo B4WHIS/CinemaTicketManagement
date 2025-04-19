@@ -3,7 +3,10 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
+import com.microsoft.sqlserver.jdbc.SQLServerConnection;
+
 import dao.Rooms_DAO;
+import model.Rooms;
 public class RoomManager {
     private Rooms_DAO roomDAO;
 

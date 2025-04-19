@@ -1,5 +1,4 @@
 package dao;
-import model.Movies;
 import java.security.Timestamp;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -9,6 +8,8 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import model.Movies;
 
 public class Movies_DAO {
     private Connection con;
