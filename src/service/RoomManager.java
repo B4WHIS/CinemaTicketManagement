@@ -1,19 +1,18 @@
 package service;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
 import dao.Rooms_DAO;
-public class RoomManager {
-    private Rooms_DAO roomDAO;
+import dbs.connectDB;
+import model.Rooms;
 
-    public RoomManager() {
-        try {
-            Connection conn = SQLServerConnection.getConnection();
-            this.roomDAO = new Rooms_DAO(conn);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+public class RoomManager {
+	 private Rooms_DAO roomDAO;
+	public RoomManager() {
+        Connection con = connectDB.getConnection();
+		this.roomDAO = new Rooms_DAO(con);
     }
 
     public boolean addRoom(Rooms room) {

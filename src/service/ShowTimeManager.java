@@ -4,16 +4,14 @@ import java.sql.SQLException;
 import java.util.List;
 
 import dao.Showtimes_DAO;
+import dbs.connectDB;
+import model.Showtimes;
 public class ShowTimeManager {
     private Showtimes_DAO showtimeDAO;
 
-    public ShowTimeManager() {
-        try {
-            Connection conn = SQLServerConnection.getConnection();
-            this.showtimeDAO = new Showtimes_DAO(conn);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+    public ShowTimeManager() throws SQLException {
+        Connection conn = connectDB.getConnection();
+		this.showtimeDAO = new Showtimes_DAO(conn);
     }
 
     public boolean addShowtime(Showtimes showtime) {
@@ -38,4 +36,3 @@ public class ShowTimeManager {
 
   
 }
-
