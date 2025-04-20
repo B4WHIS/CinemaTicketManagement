@@ -6,17 +6,17 @@ import java.util.List;
 import com.microsoft.sqlserver.jdbc.SQLServerConnection;
 
 import dao.Showtimes_DAO;
+<<<<<<< HEAD
+=======
+import dbs.connectDB;
+>>>>>>> phim_phong_lichChieu
 import model.Showtimes;
 public class ShowTimeManager {
     private Showtimes_DAO showtimeDAO;
 
-    public ShowTimeManager() {
-        try {
-            Connection conn = SQLServerConnection.getConnection();
-            this.showtimeDAO = new Showtimes_DAO(conn);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+    public ShowTimeManager() throws SQLException {
+        Connection conn = connectDB.getConnection();
+		this.showtimeDAO = new Showtimes_DAO(conn);
     }
 
     public boolean addShowtime(Showtimes showtime) {
@@ -41,4 +41,4 @@ public class ShowTimeManager {
 
   
 }
-
+//dăedw
