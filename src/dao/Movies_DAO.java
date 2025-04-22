@@ -1,48 +1,26 @@
 package dao;
-<<<<<<< HEAD
-import java.security.Timestamp;
+
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-=======
-
-import model.Movies;
-import dbs.connectDB;
-
-import java.sql.*;
->>>>>>> phim_phong_lichChieu
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
 import model.Movies;
 
 public class Movies_DAO {
-    private static Connection con;
-    
+    private Connection con;
+
     // Constructor nhận connection từ bên ngoài
     public Movies_DAO(Connection conn) {
         this.con = conn;
     }
-<<<<<<< HEAD
-    public boolean addMovie(Movies movies){
-        String checksql = "SELECT COUNT(*) FROM Movies WHERE title=? AND director=? AND releaseDate=?";
-      try(PreparedStatement checkSmt = con.prepareStatement(checksql)  ){
-        checkSmt.setString(1,movies.getTitle());
-        checkSmt.setString(2,movies.getDirector());
-        checkSmt.setString(3,Timestamp.valueOf(movies.getReleaseDate()));
-        ResultSet rs = checkSmt.executeQuery();
-        if(rs.next() && rs.getInt(1) > 0){
-            return false;
-        }
-=======
->>>>>>> d2b3e1732ddec16421b08b270050edd0ebdff2c5
 
     // Constructor mặc định: tự lấy connection từ connectDB
     public Movies_DAO() {
-        this.con = connectDB.getConnection();
+        this.con = connectDB.getConnection(); // Đảm bảo class connectDB có phương thức getConnection()
     }
 
     // Thêm phim mới
@@ -137,7 +115,7 @@ public class Movies_DAO {
     }
 
     // Lấy phim theo ID
-    public static Movies getMovieByID(int id) {
+    public Movies getMovieByID(int id) {
         String sql = "SELECT * FROM Movies WHERE movieID=?";
         try (PreparedStatement stmt = con.prepareStatement(sql)) {
             stmt.setInt(1, id);
@@ -156,7 +134,7 @@ public class Movies_DAO {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return null; // Không tìm thấy
+        return null;
     }
 
     // Lấy tất cả phim

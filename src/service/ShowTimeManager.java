@@ -6,10 +6,6 @@ import java.util.List;
 import com.microsoft.sqlserver.jdbc.SQLServerConnection;
 
 import dao.Showtimes_DAO;
-<<<<<<< HEAD
-=======
-import dbs.connectDB;
->>>>>>> phim_phong_lichChieu
 import model.Showtimes;
 public class ShowTimeManager {
     private Showtimes_DAO showtimeDAO;

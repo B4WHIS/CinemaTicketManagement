@@ -7,14 +7,9 @@ import java.util.List;
 import com.microsoft.sqlserver.jdbc.SQLServerConnection;
 
 import dao.Rooms_DAO;
-<<<<<<< HEAD
 import model.Rooms;
 public class RoomManager {
     private Rooms_DAO roomDAO;
-=======
-import dbs.connectDB;
-import model.Rooms;
->>>>>>> phim_phong_lichChieu
 
 public class RoomManager {
 	 private Rooms_DAO roomDAO;
