@@ -3,11 +3,15 @@ package gui;
 import model.Product_Orders;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ConfirmationScreen extends JFrame {
+public class ConfirmationScreen extends JFrame implements ActionListener {
     private List<Product_Orders> cart;
+    private JButton backButton;
+    private JButton confirmButton;
 
     public ConfirmationScreen(List<Product_Orders> cart) {
         this.cart = cart;
@@ -26,71 +30,68 @@ public class ConfirmationScreen extends JFrame {
 
         // Tiêu đề
         JLabel titleLabel = new JLabel("Xác Nhận Đặt Hàng", JLabel.CENTER);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        titleLabel.setFont(new Font("Times New Roman", Font.BOLD, 24));
         mainPanel.add(titleLabel, BorderLayout.NORTH);
 
         // Panel nội dung
-        JPanel contentPanel = new JPanel(new GridLayout(0, 1, 0, 2)); // Giảm vgap từ 10 xuống 2
+        JPanel contentPanel = new JPanel();
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
         contentPanel.setBackground(Color.WHITE);
 
         // Thông tin vé (dữ liệu giả lập)
-        JLabel ticketHeader = new JLabel("Thông Tin Vé:");
-        ticketHeader.setFont(new Font("Arial", Font.BOLD, 18));
-        contentPanel.add(ticketHeader);
+        JPanel ticketHeaderPanel = createInfoRow("Thông Tin Vé:");
+        ticketHeaderPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
+        JLabel ticketHeader = (JLabel) ticketHeaderPanel.getComponent(0);
+        ticketHeader.setFont(new Font("Times New Roman", Font.BOLD, 18));
+        contentPanel.add(ticketHeaderPanel);
 
-        contentPanel.add(createInfoLabel("Tên phim: Phim ABC"));
-        contentPanel.add(createInfoLabel("Phòng chiếu: Phòng 1"));
-        contentPanel.add(createInfoLabel("Suất chiếu: 18:00, 22/04/2025"));
-        contentPanel.add(createInfoLabel("Ghế: A1"));
+        contentPanel.add(createInfoRow("Tên phim: Phim ABC"));
+        contentPanel.add(createInfoRow("Phòng chiếu: Phòng 1"));
+        contentPanel.add(createInfoRow("Suất chiếu: 18:00, 22/04/2025"));
+        contentPanel.add(createInfoRow("Ghế: A1"));
 
-        // Đồ ăn (dữ liệu giả lập nếu cart rỗng)
-        JLabel foodHeader = new JLabel("Đồ Ăn:");
-        foodHeader.setFont(new Font("Arial", Font.BOLD, 18));
-        contentPanel.add(foodHeader);
+        // Đồ ăn
+        JPanel foodHeaderPanel = createInfoRow("Đồ Ăn:");
+        foodHeaderPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 5, 0));
+        JLabel foodHeader = (JLabel) foodHeaderPanel.getComponent(0);
+        foodHeader.setFont(new Font("Times New Roman", Font.BOLD, 18));
+        contentPanel.add(foodHeaderPanel);
 
         double cartTotal = 0.0;
         if (cart.isEmpty()) {
-            // Dữ liệu giả lập
-            contentPanel.add(createInfoLabel("Bắp phô mai x2 (60,000)"));
-            contentPanel.add(createInfoLabel("Pepsi x1 (20,000)"));
-            cartTotal = 80000;
+            contentPanel.add(createInfoRow("Không có món nào"));
         } else {
             for (Product_Orders po : cart) {
                 // Giả lập thông tin sản phẩm
                 String productName = "Sản phẩm " + po.getProductID(); // Tên giả lập
                 String productInfo = String.format("%s x%d (%,.0f)", productName, po.getQuantity(), po.getPrice() * po.getQuantity());
-                contentPanel.add(createInfoLabel(productInfo));
+                contentPanel.add(createInfoRow(productInfo));
                 cartTotal += po.getPrice() * po.getQuantity();
             }
         }
 
         // Tổng tiền
-        JLabel totalLabel = new JLabel(String.format("Tổng tiền: %,d", (int) cartTotal));
-        totalLabel.setFont(new Font("Arial", Font.PLAIN, 18));
-        contentPanel.add(totalLabel);
+        JPanel totalPanel = createInfoRow(String.format("Tổng tiền: %,d", (int) cartTotal));
+        totalPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
+        contentPanel.add(totalPanel);
 
         // Panel điều hướng
         JPanel navigationPanel = new JPanel(new BorderLayout());
         navigationPanel.setBackground(Color.WHITE);
+        navigationPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
 
-        JButton backButton = new JButton("← Quay lại");
-        backButton.setFont(new Font("Arial", Font.PLAIN, 16));
+        backButton = new JButton("← Quay lại");
+        backButton.setFont(new Font("Times New Roman", Font.PLAIN, 16));
         backButton.setBackground(Color.WHITE);
         backButton.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        backButton.addActionListener(e -> {
-            new ProductSelectionScreen().setVisible(true);
-            dispose();
-        });
+        backButton.addActionListener(this);
         navigationPanel.add(backButton, BorderLayout.WEST);
 
-        JButton confirmButton = new JButton("Xác nhận →");
-        confirmButton.setFont(new Font("Arial", Font.PLAIN, 16));
+        confirmButton = new JButton("Xác nhận →");
+        confirmButton.setFont(new Font("Times New Roman", Font.PLAIN, 16));
         confirmButton.setBackground(Color.WHITE);
         confirmButton.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        confirmButton.addActionListener(e -> {
-            JOptionPane.showMessageDialog(this, "Đặt hàng thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
-            dispose();
-        });
+        confirmButton.addActionListener(this);
         navigationPanel.add(confirmButton, BorderLayout.EAST);
 
         mainPanel.add(new JScrollPane(contentPanel), BorderLayout.CENTER);
@@ -98,10 +99,27 @@ public class ConfirmationScreen extends JFrame {
         add(mainPanel);
     }
 
-    private JLabel createInfoLabel(String text) {
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (e.getSource() == backButton) {
+            new ProductSelectionScreen().setVisible(true);
+            dispose();
+        } else if (e.getSource() == confirmButton) {
+            JOptionPane.showMessageDialog(this, "Đặt hàng thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+            dispose();
+        }
+    }
+
+    private JPanel createInfoRow(String text) {
+        JPanel rowPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        rowPanel.setBackground(Color.WHITE);
+        rowPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30)); // Giới hạn chiều cao
+
         JLabel label = new JLabel(text);
-        label.setFont(new Font("Arial", Font.PLAIN, 18));
-        return label;
+        label.setFont(new Font("Times New Roman", Font.PLAIN, 18));
+        rowPanel.add(label);
+
+        return rowPanel;
     }
 
     public static void main(String[] args) {
