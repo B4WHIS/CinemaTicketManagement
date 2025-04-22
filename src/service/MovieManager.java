@@ -36,4 +36,8 @@ public class MovieManager {
 	    public List<Movies> getAllMovies() {
 	        return movieDao.getAllMovies();
 	    }
+	    public List<Movies> searchMoviesByTitle(String keyword) {
+	        return movieDao.searchMoviesByTitle(keyword);
+	    }
+
 }

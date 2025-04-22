@@ -1,3 +1,5 @@
+package model;
+
 
 public class Rooms {
     private int roomID;
@@ -47,3 +49,4 @@ public class Rooms {
 
 
 }
+

@@ -6,22 +6,18 @@ import java.sql.SQLException;
 import java.util.stream.IntStream;
 
 public class connectDB {
-	public static Connection con;
-	private static connectDB instance = new connectDB();
-	public static connectDB getInstance() {
-		return instance;
-	}
-	public void connect() {
-		String url = "jdbc:sqlserver://localhost:1433;databaseName=CinemaTickerManagement";
-		try {
-			con = DriverManager.getConnection(url);
-			
-		}catch(SQLException e) {
-			e.printStackTrace();
-		}
-	}
-	public static Connection getConnection() {
-		return con;
-	}
-	
+    private static Connection connection;
+
+    public static Connection getConnection() {
+        if (connection == null) {
+            try {
+            	String url = "jdbc:sqlserver://localhost:1433;databaseName=CinemaTicketManagement;integratedSecurity=true";
+             
+                connection = DriverManager.getConnection(url);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return connection;
+    }
 }

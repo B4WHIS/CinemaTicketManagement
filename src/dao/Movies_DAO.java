@@ -23,7 +23,7 @@ public class Movies_DAO {
 
     // Thêm phim mới
     public boolean addMovie(Movies movie) {
-        String checkSql = "SELECT COUNT(*) FROM Movies WHERE title=? AND director=? AND releaseDate=?";
+        String checkSql = "SELECT COUNT(*) FROM Movies WHERE Title=? AND Director=? AND ReleaseDate=?";
         try (PreparedStatement checkStmt = con.prepareStatement(checkSql)) {
             checkStmt.setString(1, movie.getTitle());
             checkStmt.setString(2, movie.getDirector());
@@ -37,7 +37,7 @@ public class Movies_DAO {
             return false;
         }
 
-        String sql = "INSERT INTO Movies (movieID, title, genre, duration, director, releaseDate, image) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Movies (MovieID, Title, Genre, Duration, Director, ReleaseDate, Image) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = con.prepareStatement(sql)) {
             stmt.setInt(1, movie.getMovieID());
             stmt.setString(2, movie.getTitle());
@@ -57,7 +57,7 @@ public class Movies_DAO {
 
     // Xóa phim
     public boolean deleteMovie(int movieID) {
-        String checkSql = "SELECT COUNT(*) FROM Movies WHERE movieID=?";
+        String checkSql = "SELECT COUNT(*) FROM Movies WHERE MovieID=?";
         try (PreparedStatement checkStmt = con.prepareStatement(checkSql)) {
             checkStmt.setInt(1, movieID);
             ResultSet rs = checkStmt.executeQuery();
@@ -69,7 +69,7 @@ public class Movies_DAO {
             return false;
         }
 
-        String sql = "DELETE FROM Movies WHERE movieID=?";
+        String sql = "DELETE FROM Movies WHERE MovieID=?";
         try (PreparedStatement stmt = con.prepareStatement(sql)) {
             stmt.setInt(1, movieID);
             stmt.executeUpdate();
@@ -82,7 +82,7 @@ public class Movies_DAO {
 
     // Cập nhật thông tin phim
     public boolean updateMovie(Movies movie) {
-        String checkSql = "SELECT COUNT(*) FROM Movies WHERE movieID=?";
+        String checkSql = "SELECT COUNT(*) FROM Movies WHERE MovieID=?";
         try (PreparedStatement checkStmt = con.prepareStatement(checkSql)) {
             checkStmt.setInt(1, movie.getMovieID());
             ResultSet rs = checkStmt.executeQuery();
@@ -94,7 +94,7 @@ public class Movies_DAO {
             return false;
         }
 
-        String sql = "UPDATE Movies SET title=?, genre=?, duration=?, director=?, releaseDate=?, image=? WHERE movieID=?";
+        String sql = "UPDATE Movies SET Title=?, Genre=?, Duration=?, Director=?, ReleaseDate=?, Image=? WHERE movieID=?";
         try (PreparedStatement stmt = con.prepareStatement(sql)) {
             stmt.setString(1, movie.getTitle());
             stmt.setString(2, movie.getGenre());
@@ -114,19 +114,19 @@ public class Movies_DAO {
 
     // Lấy phim theo ID
     public static Movies getMovieByID(int id) {
-        String sql = "SELECT * FROM Movies WHERE movieID=?";
+        String sql = "SELECT * FROM Movies WHERE MovieID=?";
         try (PreparedStatement stmt = con.prepareStatement(sql)) {
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 return new Movies(
-                        rs.getInt("movieID"),
-                        rs.getString("title"),
-                        rs.getString("genre"),
-                        rs.getInt("duration"),
-                        rs.getString("director"),
-                        rs.getTimestamp("releaseDate").toLocalDateTime(),
-                        rs.getBytes("image")
+                        rs.getInt("MovieID"),
+                        rs.getString("Title"),
+                        rs.getString("Genre"),
+                        rs.getInt("Duration"),
+                        rs.getString("Director"),
+                        rs.getTimestamp("ReleaseDate").toLocalDateTime(),
+                        rs.getBytes("Image")
                 );
             }
         } catch (SQLException e) {
@@ -144,13 +144,13 @@ public class Movies_DAO {
 
             while (rs.next()) {
                 Movies movie = new Movies(
-                        rs.getInt("movieID"),
-                        rs.getString("title"),
-                        rs.getString("genre"),
-                        rs.getInt("duration"),
-                        rs.getString("director"),
-                        rs.getTimestamp("releaseDate").toLocalDateTime(),
-                        rs.getBytes("image")
+                        rs.getInt("MovieID"),
+                        rs.getString("Title"),
+                        rs.getString("Genre"),
+                        rs.getInt("Duration"),
+                        rs.getString("Director"),
+                        rs.getTimestamp("DeleaseDate").toLocalDateTime(),
+                        rs.getBytes("Image")
                 );
                 movieList.add(movie);
             }
@@ -160,4 +160,30 @@ public class Movies_DAO {
         }
         return movieList;
     }
+    public List<Movies> searchMoviesByTitle(String keyword) {
+        List<Movies> list = new ArrayList<>();
+        String sql = "SELECT * FROM Movies WHERE title LIKE ?";
+        
+        try (PreparedStatement stmt = con.prepareStatement(sql)) {
+            stmt.setString(1, "%" + keyword + "%");
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                Movies movie = new Movies(
+                    rs.getInt("MovieID"),
+                    rs.getString("Title"),
+                    rs.getString("Genre"),
+                    rs.getInt("Duration"),
+                    rs.getString("Director"),
+                    rs.getTimestamp("ReleaseDate").toLocalDateTime(),
+                    rs.getBytes("Image") 
+                );
+                list.add(movie);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
 }

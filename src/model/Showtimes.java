@@ -1,3 +1,5 @@
+package model;
+
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -7,7 +9,7 @@ public class Showtimes {
     private Movies movie;
     private Rooms room;
     private LocalDateTime startTime;
-    private LocalDateTime endTime;
+    private LocalDateTime dateTime;
     private BigDecimal price;
     public Showtimes() {
     }
@@ -17,7 +19,7 @@ public class Showtimes {
         this.movie = movie;
         this.room = room;
         this.startTime = startTime;
-        this.endTime = endTime;
+        this.dateTime = endTime;
         this.price = price;
     }
     public int getShowTimeID() {
@@ -44,11 +46,11 @@ public class Showtimes {
     public void setStartTime(LocalDateTime startTime) {
         this.startTime = startTime;
     }
-    public LocalDateTime getEndTime() {
-        return endTime;
+    public LocalDateTime getdateTime() {
+        return dateTime;
     }
-    public void setEndTime(LocalDateTime endTime) {
-        this.endTime = endTime;
+    public void setdateTime(LocalDateTime endTime) {
+        this.dateTime = endTime;
     }
     public BigDecimal getPrice() {
         return price;
@@ -59,3 +61,4 @@ public class Showtimes {
 
   
 }
+
