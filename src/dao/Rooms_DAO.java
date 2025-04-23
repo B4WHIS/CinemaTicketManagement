@@ -111,7 +111,7 @@ public class Rooms_DAO {
                 int capacity = rs.getInt("Capacity");
                 String type = rs.getString("Type");
 
-            return new Roomss(roomID, roomName, capacity, type);
+            return new Rooms(roomID, roomName, capacity, type);
         }
     } catch (SQLException e) {
         e.printStackTrace();
@@ -124,7 +124,7 @@ public class Rooms_DAO {
         List<Rooms> rooms = new ArrayList<>();
         String sql = "SELECT * FROM Rooms";
 
-    try (PreparedStatement stmt = conn.prepareStatement(sql);
+    try (PreparedStatement stmt = con.prepareStatement(sql);
          ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
@@ -133,7 +133,7 @@ public class Rooms_DAO {
                 int capacity = rs.getInt("Capacity");
                 String type = rs.getString("Type");
 
-            Room room = new Room(roomID, name, capacity);
+            Rooms room = new Room(roomID, name, capacity);
             rooms.add(room);
         }
 

@@ -1,8 +1,5 @@
 package dao;
 
-import model.Orders;
-import model.Users;
-import model.PaymentMethod;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -12,6 +9,10 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import model.Orders;
+import model.PaymentMethod;
+import model.Users;
 
 public class OrderDAO {
     private Connection getConnection() throws SQLException {

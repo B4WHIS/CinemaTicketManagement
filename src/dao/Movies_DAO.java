@@ -8,28 +8,16 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
+import dbs.connectDB;
 import model.Movies;
 
 public class Movies_DAO {
-    private Connection con;
+    private static Connection con;
 
     // Constructor nhận connection từ bên ngoài
     public Movies_DAO(Connection conn) {
         this.con = conn;
     }
-<<<<<<< HEAD
-    public boolean addMovie(Movies movies){
-        String checksql = "SELECT COUNT(*) FROM Movies WHERE title=? AND director=? AND releaseDate=?";
-      try(PreparedStatement checkSmt = con.prepareStatement(checksql)  ){
-        checkSmt.setString(1,movies.getTitle());
-        checkSmt.setString(2,movies.getDirector());
-        checkSmt.setString(3,Timestamp.valueOf(movies.getReleaseDate()));
-        ResultSet rs = checkSmt.executeQuery();
-        if(rs.next() && rs.getInt(1) > 0){
-            return false;
-        }
-=======
->>>>>>> d2b3e1732ddec16421b08b270050edd0ebdff2c5
 
     // Constructor mặc định: tự lấy connection từ connectDB
     public Movies_DAO() {

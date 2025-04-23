@@ -24,6 +24,14 @@ import javax.swing.SwingUtilities;
 import model.Movies;
 import service.MovieManager;
 
+<<<<<<< HEAD
+=======
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.List;
+//b
+>>>>>>> GiaoDienCuaChau
 public class mainGUI extends JFrame {
     private JPanel moviesPanel;
     private JTextField searchField;
