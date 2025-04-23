@@ -8,7 +8,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
-
+//b
 public class mainGUI extends JFrame {
     private JPanel moviesPanel;
     private JTextField searchField;
