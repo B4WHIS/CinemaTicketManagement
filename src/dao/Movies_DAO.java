@@ -8,6 +8,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
+import dbs.connectDB;
 import model.Movies;
 
 public class Movies_DAO {
