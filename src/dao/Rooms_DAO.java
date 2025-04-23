@@ -111,21 +111,21 @@ public class Rooms_DAO {
                 int capacity = rs.getInt("Capacity");
                 String type = rs.getString("Type");
 
-            return new Rooms(roomID, roomName, capacity, type);
+                return new Rooms(roomID, roomName, capacity, type);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-    } catch (SQLException e) {
-        e.printStackTrace();
+        return null;
     }
-    return null;
-}
 
     // Lấy tất cả phòng
     public List<Rooms> getAllRooms() {
         List<Rooms> rooms = new ArrayList<>();
         String sql = "SELECT * FROM Rooms";
 
-    try (PreparedStatement stmt = con.prepareStatement(sql);
-         ResultSet rs = stmt.executeQuery()) {
+        try (PreparedStatement stmt = con.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
                 int roomID = rs.getInt("RoomID");
@@ -133,13 +133,13 @@ public class Rooms_DAO {
                 int capacity = rs.getInt("Capacity");
                 String type = rs.getString("Type");
 
-            Rooms room = new Room(roomID, name, capacity);
-            rooms.add(room);
-        }
+                Rooms room = new Rooms(roomID,  roomName, capacity, type);
+                rooms.add(room);
+            }
 
-    } catch (SQLException e) {
-        e.printStackTrace();
-    }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
 
         return rooms;
     }

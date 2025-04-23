@@ -25,7 +25,7 @@ public class AddMovieFrame extends JFrame {
     public AddMovieFrame() {
         movieManager = new MovieManager();
         setTitle("Thêm Phim Mới");
-        setSize(400, 300);
+        setSize(1500, 1000);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
