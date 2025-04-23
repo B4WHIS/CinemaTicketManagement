@@ -7,19 +7,26 @@ public class Tickets {
 	private Showtimes showTimeID;
 	private LocalDateTime saleDate;
 	private Orders orderID;
+	private Seats seatID;
 	private double price;
 	
 	public Tickets() {
 		
 	}
 
-	public Tickets(int ticketID, Showtimes showTimeID, LocalDateTime saleDate, Orders orderID, double price) {
+
+
+	public Tickets(int ticketID, Showtimes showTimeID, LocalDateTime saleDate, Orders orderID, Seats seatID,
+			double price) {
 		this.ticketID = ticketID;
 		this.showTimeID = showTimeID;
 		this.saleDate = saleDate;
 		this.orderID = orderID;
+		this.seatID = seatID;
 		this.price = price;
 	}
+
+
 
 	public int getTicketID() {
 		return ticketID;
