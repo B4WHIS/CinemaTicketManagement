@@ -7,10 +7,6 @@ import java.util.List;
 import com.microsoft.sqlserver.jdbc.SQLServerConnection;
 
 import dao.Movies_DAO;
-<<<<<<< HEAD
-=======
-import dbs.connectDB;
->>>>>>> phim_phong_lichChieu
 import model.Movies;
 
 public class MovieManager {
@@ -38,7 +34,6 @@ public class MovieManager {
 	        return movieDao.getMovieByID(id);
 	    }
 
-<<<<<<< HEAD
     public MovieManager() {
         try {
             Connection conn = SQLServerConnection.getConnection();
@@ -71,9 +66,4 @@ public class MovieManager {
     public List<Movies> getAllMovies() {
         return movieDAO.getAllMovies();
     }
-=======
-	    public List<Movies> getAllMovies() {
-	        return movieDao.getAllMovies();
-	    }
->>>>>>> phim_phong_lichChieu
 }

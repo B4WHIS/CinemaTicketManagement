@@ -4,16 +4,16 @@ import java.time.LocalDateTime;
 
 public class Tickets {
 	private int ticketID;
-	private int showTimeID;
+	private Showtimes showTimeID;
 	private LocalDateTime saleDate;
-	private int orderID;
+	private Orders orderID;
 	private double price;
 	
 	public Tickets() {
 		
 	}
 
-	public Tickets(int ticketID, int showTimeID, LocalDateTime saleDate, int orderID, double price) {
+	public Tickets(int ticketID, Showtimes showTimeID, LocalDateTime saleDate, Orders orderID, double price) {
 		this.ticketID = ticketID;
 		this.showTimeID = showTimeID;
 		this.saleDate = saleDate;
@@ -29,11 +29,11 @@ public class Tickets {
 		this.ticketID = ticketID;
 	}
 
-	public int getShowTimeID() {
+	public Showtimes getShowTimeID() {
 		return showTimeID;
 	}
 
-	public void setShowTimeID(int showTimeID) {
+	public void setShowTimeID(Showtimes showTimeID) {
 		this.showTimeID = showTimeID;
 	}
 
@@ -45,11 +45,11 @@ public class Tickets {
 		this.saleDate = saleDate;
 	}
 
-	public int getOrderID() {
+	public Orders getOrderID() {
 		return orderID;
 	}
 
-	public void setOrderID(int orderID) {
+	public void setOrderID(Orders orderID) {
 		this.orderID = orderID;
 	}
 

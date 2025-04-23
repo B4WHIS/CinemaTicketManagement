@@ -1,54 +1,58 @@
 package dao;
-<<<<<<< HEAD
-import java.security.Timestamp;
+
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-=======
-
-import model.Movies;
-import dbs.connectDB;
-
-import java.sql.*;
->>>>>>> phim_phong_lichChieu
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
 import model.Movies;
 
 public class Movies_DAO {
-    private static Connection con;
-    
+    private Connection con;
+
     // Constructor nhận connection từ bên ngoài
     public Movies_DAO(Connection conn) {
         this.con = conn;
-    }  
-    public Movies_DAO(){
-        try {
-            String url = "jdbc:sqlserver://localhost:1433;databaseName=CinemaTickerManagement";
-            
-            con = DriverManager.getConnection(url);
-        } catch (Exception e) {
-            // TODO: handle exception
-            e.printStackTrace();
-        }
     }
+<<<<<<< HEAD
     public boolean addMovie(Movies movies){
         String checksql = "SELECT COUNT(*) FROM Movies WHERE title=? AND director=? AND releaseDate=?";
       try(PreparedStatement checkSmt = con.prepareStatement(checksql)  ){
-        checkSmt.setString(1,movies.getTile());
+        checkSmt.setString(1,movies.getTitle());
         checkSmt.setString(2,movies.getDirector());
         checkSmt.setString(3,Timestamp.valueOf(movies.getReleaseDate()));
         ResultSet rs = checkSmt.executeQuery();
         if(rs.next() && rs.getInt(1) > 0){
             return false;
         }
+=======
+>>>>>>> d2b3e1732ddec16421b08b270050edd0ebdff2c5
 
-      } 
-      String sql = "INSERT INTO Movies (movieID, title, genre, duration, director, releaseDate, image) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    // Constructor mặc định: tự lấy connection từ connectDB
+    public Movies_DAO() {
+        this.con = connectDB.getConnection();
+    }
+
+    // Thêm phim mới
+    public boolean addMovie(Movies movie) {
+        String checkSql = "SELECT COUNT(*) FROM Movies WHERE title=? AND director=? AND releaseDate=?";
+        try (PreparedStatement checkStmt = con.prepareStatement(checkSql)) {
+            checkStmt.setString(1, movie.getTitle());
+            checkStmt.setString(2, movie.getDirector());
+            checkStmt.setTimestamp(3, Timestamp.valueOf(movie.getReleaseDate()));
+            ResultSet rs = checkStmt.executeQuery();
+            if (rs.next() && rs.getInt(1) > 0) {
+                return false; // Phim đã tồn tại
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        String sql = "INSERT INTO Movies (movieID, title, genre, duration, director, releaseDate, image) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = con.prepareStatement(sql)) {
             stmt.setInt(1, movie.getMovieID());
             stmt.setString(2, movie.getTitle());
@@ -124,7 +128,7 @@ public class Movies_DAO {
     }
 
     // Lấy phim theo ID
-    public static Movies getMovieByID(int id) {
+    public Movies getMovieByID(int id) {
         String sql = "SELECT * FROM Movies WHERE movieID=?";
         try (PreparedStatement stmt = con.prepareStatement(sql)) {
             stmt.setInt(1, id);
@@ -143,7 +147,7 @@ public class Movies_DAO {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return null; // Không tìm thấy
+        return null;
     }
 
     // Lấy tất cả phim
