@@ -211,18 +211,21 @@ public class Showtimes_DAO {
 
         return showtimeList;
     }
+    
+    
+    
  // Lấy toàn bộ danh sách lịch chiếu
     public List<Showtimes> getAllShowtimes() {
         List<Showtimes> showtimeList = new ArrayList<>();
         
         String sql = "SELECT s.ShowtimeID, s.MovieID, s.RoomID, s.StartTime, s.DateTime, s.Price, " +
-                     "m.Title AS movieTitle, m.Genre AS movieGenre, m.Duration AS movieDuration, " +
-                     "m.Director AS movieDirector, m.ReleaseDate AS movieReleaseDate, m.Image AS movieImage, " +
-                     "r.RoomName AS roomName, r.Capacity AS roomCapacity, r.Type AS roomType " +
-                     "FROM Schedules s " +
-                     "JOIN Movies m ON s.MovieID = m.MovieID " +
-                     "JOIN Rooms r ON s.RoomID = r.RoomID " +
-                     "ORDER BY s.StartTime ASC";  // Sắp xếp theo thời gian bắt đầu (tùy chọn)
+                "m.Title AS movieTitle, m.Genre AS movieGenre, m.Duration AS movieDuration, " +
+                "m.Director AS movieDirector, m.ReleaseDate AS movieReleaseDate, m.Image AS movieImage, " +
+                "r.RoomName AS roomName, r.Capacity AS roomCapacity, r.Type AS roomType " +
+                "FROM Showtimes s " +  // sửa chỗ này
+                "JOIN Movies m ON s.MovieID = m.MovieID " +
+                "JOIN Rooms r ON s.RoomID = r.RoomID " +
+                "ORDER BY s.StartTime ASC";  // Sắp xếp theo thời gian bắt đầu (tùy chọn)
 
         try (PreparedStatement stmt = con.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {

@@ -9,7 +9,7 @@ import com.microsoft.sqlserver.jdbc.SQLServerConnection;
 import dao.Movies_DAO;
 import dbs.connectDB;
 import model.Movies;
-
+//uigui
 public class MovieManager {
 	private Movies_DAO movieDao;
 	public MovieManager() {
@@ -20,7 +20,7 @@ public class MovieManager {
 			// TODO: handle exception
 			e.printStackTrace();
 		}
-		
+		/////dsfhihds
 	}
 	public boolean addMovie(Movies movie) {
 		return movieDao.addMovie(movie);
