@@ -1,4 +1,5 @@
-package model;
+
+import java.sql.Date;
 import java.time.LocalDateTime;
 
 
@@ -55,7 +56,7 @@ public class Movies {
     public LocalDateTime getReleaseDate() {
         return releaseDate;
     }
-    public void setReleaseDate(LocalDateTime releaseDate) {
+    public void setReleaseDate(Date releaseDate) {
         this.releaseDate = releaseDate;
     }
     public byte[] getImage() {

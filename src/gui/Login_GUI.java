@@ -83,6 +83,7 @@ public class Login_GUI extends JFrame {
         add(pnlSouth, BorderLayout.SOUTH);
     }
 
+
     public static void main(String[] args) {
         Login_GUI login_GUI = new Login_GUI();
         login_GUI.setVisible(true);

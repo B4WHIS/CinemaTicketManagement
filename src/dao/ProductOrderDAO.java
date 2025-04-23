@@ -14,22 +14,24 @@ import java.util.List;
 @SuppressWarnings("unused")
 public class ProductOrderDAO {
     private Connection getConnection() throws SQLException {
-        String url = "jdbc:mysql://localhost:1433/databaseName=CinemaTickerManagement"; 
+        // Sửa chuỗi kết nối để phù hợp với SQL Server
+        String url = "jdbc:sqlserver://localhost:1433;databaseName=CinemaTickerManagement;encrypt=true;trustServerCertificate=true";
         String user = "sa";
-        String password = "sapassword"; 
+        String password = "sapassword";
         return DriverManager.getConnection(url, user, password);
     }
 
     // Lưu chi tiết đơn hàng mới
     public void saveProductOrder(Product_Orders productOrder) throws SQLException {
-        String query = "INSERT INTO Product_Orders (orderID, productID, quantity, price) VALUES (?, ?, ?, ?)";
+        String query = "INSERT INTO Product_Orders (productOrderID, orderID, productID, quantity, price) VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setInt(1, productOrder.getOrderID().getOrderID());
-            stmt.setInt(2, productOrder.getProductID());
-            stmt.setInt(3, productOrder.getQuantity());
-            stmt.setDouble(4, productOrder.getPrice());
+            stmt.setInt(1, productOrder.getProductOrderID()); // Thêm productOrderID
+            stmt.setInt(2, productOrder.getOrderID().getOrderID());
+            stmt.setInt(3, productOrder.getProductID());
+            stmt.setInt(4, productOrder.getQuantity());
+            stmt.setDouble(5, productOrder.getPrice());
             stmt.executeUpdate();
         }
     }
@@ -48,6 +50,7 @@ public class ProductOrderDAO {
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     Product_Orders po = new Product_Orders();
+                    po.setProductOrderID(rs.getInt("productOrderID")); // Lấy productOrderID
                     Orders order = new Orders();
                     order.setOrderID(rs.getInt("orderID"));
                     po.setOrderID(order);

@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 import dao.SeatDAO;
+import model.Rooms;
 import model.Seats;
 
 public class SeatManager {
@@ -31,7 +32,7 @@ public class SeatManager {
     }
 
     // Lấy danh sách ghế theo phòng (Read - theo phòng)
-    public List<Seats> getSeatsByRoom(int roomID) throws SQLException {
+    public List<Seats> getSeatsByRoom(Rooms roomID) throws SQLException {
         return seatDAO.getSeatsByRoom(roomID);
     }
 
