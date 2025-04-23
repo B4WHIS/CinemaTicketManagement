@@ -20,7 +20,7 @@ public class Rooms_DAO {
 
     // Thêm phòng mới
     public boolean addRoom(Rooms room) {
-        String checkSql = "SELECT COUNT(*) FROM Rooms WHERE roomName=?";
+        String checkSql = "SELECT COUNT(*) FROM Rooms WHERE RoomName=?";
         try (PreparedStatement checkStmt = con.prepareStatement(checkSql)) {
             checkStmt.setString(1, room.getRoomName());
             ResultSet rs = checkStmt.executeQuery();
@@ -32,7 +32,7 @@ public class Rooms_DAO {
             return false;
         }
 
-        String sql = "INSERT INTO Rooms (roomID, roomName, capacity, type) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO Rooms (RoomID, RoomName, Capacity, Type) VALUES (?, ?, ?, ?)";
         try (PreparedStatement stmt = con.prepareStatement(sql)) {
             stmt.setInt(1, room.getRoomID());
             stmt.setString(2, room.getRoomName());
@@ -48,7 +48,7 @@ public class Rooms_DAO {
 
     // Cập nhật phòng
     public boolean updateRoom(Rooms room) {
-        String checkSql = "SELECT COUNT(*) FROM Rooms WHERE roomID=?";
+        String checkSql = "SELECT COUNT(*) FROM Rooms WHERE RoomID=?";
         try (PreparedStatement checkStmt = con.prepareStatement(checkSql)) {
             checkStmt.setInt(1, room.getRoomID());
             ResultSet rs = checkStmt.executeQuery();
@@ -60,7 +60,7 @@ public class Rooms_DAO {
             return false;
         }
 
-        String sql = "UPDATE Rooms SET roomName=?, capacity=?, type=? WHERE roomID=?";
+        String sql = "UPDATE Rooms SET RoomName=?, Capacity=?, Type=? WHERE RoomID=?";
         try (PreparedStatement stmt = con.prepareStatement(sql)) {
             stmt.setString(1, room.getRoomName());
             stmt.setInt(2, room.getCapacity());
@@ -76,7 +76,7 @@ public class Rooms_DAO {
 
     // Xóa phòng
     public boolean deleteRoom(int roomID) {
-        String checkSql = "SELECT COUNT(*) FROM Rooms WHERE roomID=?";
+        String checkSql = "SELECT COUNT(*) FROM Rooms WHERE RoomID=?";
         try (PreparedStatement checkStmt = con.prepareStatement(checkSql)) {
             checkStmt.setInt(1, roomID);
             ResultSet rs = checkStmt.executeQuery();
@@ -88,7 +88,7 @@ public class Rooms_DAO {
             return false;
         }
 
-        String sql = "DELETE FROM Rooms WHERE roomID=?";
+        String sql = "DELETE FROM Rooms WHERE RoomID=?";
         try (PreparedStatement stmt = con.prepareStatement(sql)) {
             stmt.setInt(1, roomID);
             stmt.executeUpdate();
@@ -101,15 +101,15 @@ public class Rooms_DAO {
 
     // Lấy phòng theo ID
     public static Rooms getRoomByID(int id) {
-        String sql = "SELECT * FROM Rooms WHERE roomID=?";
+        String sql = "SELECT * FROM Rooms WHERE RoomID=?";
         try (PreparedStatement stmt = con.prepareStatement(sql)) {
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                int roomID = rs.getInt("roomID");
-                String roomName = rs.getString("roomName");
-                int capacity = rs.getInt("capacity");
-                String type = rs.getString("type");
+                int roomID = rs.getInt("RoomID");
+                String roomName = rs.getString("RoomName");
+                int capacity = rs.getInt("Capacity");
+                String type = rs.getString("Type");
 
             return new Roomss(roomID, roomName, capacity, type);
         }
@@ -128,10 +128,10 @@ public class Rooms_DAO {
          ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
-                int roomID = rs.getInt("roomID");
-                String roomName = rs.getString("roomName");
-                int capacity = rs.getInt("capacity");
-                String type = rs.getString("type");
+                int roomID = rs.getInt("RoomID");
+                String roomName = rs.getString("RoomName");
+                int capacity = rs.getInt("Capacity");
+                String type = rs.getString("Type");
 
             Room room = new Room(roomID, name, capacity);
             rooms.add(room);

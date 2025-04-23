@@ -63,7 +63,7 @@ public class MovieManager {
         return movieDAO.getMovieByID(id);
     }
 
-    public List<Movies> getAllMovies() {
-        return movieDAO.getAllMovies();
-    }
+	    public List<Movies> getAllMovies() {
+	        return movieDao.getAllMovies();
+	    }
 }

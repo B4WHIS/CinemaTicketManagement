@@ -1,4 +1,4 @@
-package model;
+
 public class Rooms {
     private int roomID;
     private String roomName;
@@ -47,3 +47,4 @@ public class Rooms {
 
 
 }
+

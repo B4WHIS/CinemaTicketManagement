@@ -8,7 +8,7 @@ import com.microsoft.sqlserver.jdbc.SQLServerConnection;
 import dao.Showtimes_DAO;
 import model.Showtimes;
 public class ShowTimeManager {
-    private Showtimes_DAO showtimeDAO;
+    private static Showtimes_DAO showtimeDAO;
 
     public ShowTimeManager() throws SQLException {
         Connection conn = connectDB.getConnection();
@@ -27,7 +27,7 @@ public class ShowTimeManager {
         return showtimeDAO.deleteShowtime(id);
     }
 
-    public Showtimes getShowtimeByID(int id) {
+    public static Showtimes getShowtimeByID(int id) {
         return showtimeDAO.getShowtimeByID(id);
     }
 
@@ -35,6 +35,10 @@ public class ShowTimeManager {
         return showtimeDAO.getShowtimesByMovie(movieID);
     }
 
+	public List<Showtimes> getAllShowtimes() {
+		
+		return showtimeDAO.getAllShowtimes();
+	}
+
   
 }
-//dăedw
