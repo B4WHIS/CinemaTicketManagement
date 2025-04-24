@@ -116,7 +116,7 @@ public class TicketDAO {
         }
     }
 
-    // Helper method to create Ticket object from ResultSet
+    
     private Tickets createTicketFromResultSet(ResultSet rs) throws SQLException {
         Tickets ticket = new Tickets();
         ticket.setTicketID(rs.getInt("ticketID"));

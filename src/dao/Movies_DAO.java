@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,7 +11,7 @@ import dbs.connectDB;
 import model.Movies;
 
 public class Movies_DAO {
-    private static Connection con;
+    private Connection con;
 
     // Constructor nhận connection từ bên ngoài
     public Movies_DAO(Connection conn) {
@@ -24,20 +23,30 @@ public class Movies_DAO {
         this.con = connectDB.getConnection();
     }
 
+    // Kiểm tra trạng thái Connection trước khi sử dụng
+    private void ensureConnection() throws SQLException {
+        if (con == null || con.isClosed()) {
+            con = connectDB.getConnection();
+            if (con == null || con.isClosed()) {
+                throw new SQLException("Không thể kết nối tới cơ sở dữ liệu.");
+            }
+        }
+    }
+
     // Thêm phim mới
-    public boolean addMovie(Movies movie) {
+    public boolean addMovie(Movies movie) throws SQLException {
+        ensureConnection();
+
         String checkSql = "SELECT COUNT(*) FROM Movies WHERE Title=? AND Director=? AND ReleaseDate=?";
         try (PreparedStatement checkStmt = con.prepareStatement(checkSql)) {
             checkStmt.setString(1, movie.getTitle());
             checkStmt.setString(2, movie.getDirector());
-            checkStmt.setTimestamp(3, Timestamp.valueOf(movie.getReleaseDate()));
-            ResultSet rs = checkStmt.executeQuery();
-            if (rs.next() && rs.getInt(1) > 0) {
-                return false; // Phim đã tồn tại
+            checkStmt.setDate(3, movie.getReleaseDate());
+            try (ResultSet rs = checkStmt.executeQuery()) {
+                if (rs.next() && rs.getInt(1) > 0) {
+                    return false; // Phim đã tồn tại
+                }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
         }
 
         String sql = "INSERT INTO Movies (MovieID, Title, Genre, Duration, Director, ReleaseDate, Image) VALUES (?, ?, ?, ?, ?, ?, ?)";
@@ -47,29 +56,26 @@ public class Movies_DAO {
             stmt.setString(3, movie.getGenre());
             stmt.setInt(4, movie.getDuration());
             stmt.setString(5, movie.getDirector());
-            stmt.setTimestamp(6, Timestamp.valueOf(movie.getReleaseDate()));
-            stmt.setBytes(7, movie.getImage());
+            stmt.setDate(6, movie.getReleaseDate());
+            stmt.setString(7, movie.getImage());
 
             stmt.executeUpdate();
             return true;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
         }
     }
 
     // Xóa phim
-    public boolean deleteMovie(int movieID) {
+    public boolean deleteMovie(int movieID) throws SQLException {
+        ensureConnection();
+
         String checkSql = "SELECT COUNT(*) FROM Movies WHERE MovieID=?";
         try (PreparedStatement checkStmt = con.prepareStatement(checkSql)) {
             checkStmt.setInt(1, movieID);
-            ResultSet rs = checkStmt.executeQuery();
-            if (rs.next() && rs.getInt(1) == 0) {
-                return false; // Phim không tồn tại
+            try (ResultSet rs = checkStmt.executeQuery()) {
+                if (rs.next() && rs.getInt(1) == 0) {
+                    return false; // Phim không tồn tại
+                }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
         }
 
         String sql = "DELETE FROM Movies WHERE MovieID=?";
@@ -77,74 +83,70 @@ public class Movies_DAO {
             stmt.setInt(1, movieID);
             stmt.executeUpdate();
             return true;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
         }
     }
 
     // Cập nhật thông tin phim
-    public boolean updateMovie(Movies movie) {
+    public boolean updateMovie(Movies movie) throws SQLException {
+        ensureConnection();
+
         String checkSql = "SELECT COUNT(*) FROM Movies WHERE MovieID=?";
         try (PreparedStatement checkStmt = con.prepareStatement(checkSql)) {
             checkStmt.setInt(1, movie.getMovieID());
-            ResultSet rs = checkStmt.executeQuery();
-            if (rs.next() && rs.getInt(1) == 0) {
-                return false; // Phim không tồn tại
+            try (ResultSet rs = checkStmt.executeQuery()) {
+                if (rs.next() && rs.getInt(1) == 0) {
+                    return false; // Phim không tồn tại
+                }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
         }
 
-        String sql = "UPDATE Movies SET Title=?, Genre=?, Duration=?, Director=?, ReleaseDate=?, Image=? WHERE movieID=?";
+        String sql = "UPDATE Movies SET Title=?, Genre=?, Duration=?, Director=?, ReleaseDate=?, Image=? WHERE MovieID=?";
         try (PreparedStatement stmt = con.prepareStatement(sql)) {
             stmt.setString(1, movie.getTitle());
             stmt.setString(2, movie.getGenre());
             stmt.setInt(3, movie.getDuration());
             stmt.setString(4, movie.getDirector());
-            stmt.setTimestamp(5, Timestamp.valueOf(movie.getReleaseDate()));
-            stmt.setBytes(6, movie.getImage());
+            stmt.setDate(5, movie.getReleaseDate());
+            stmt.setString(6, movie.getImage());
             stmt.setInt(7, movie.getMovieID());
 
             stmt.executeUpdate();
             return true;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
         }
     }
 
     // Lấy phim theo ID
-    public static Movies getMovieByID(int id) {
-        String sql = "SELECT * FROM Movies WHERE movieID=?";
+    public Movies getMovieByID(int id) throws SQLException {
+        ensureConnection();
+
+        String sql = "SELECT * FROM Movies WHERE MovieID=?";
         try (PreparedStatement stmt = con.prepareStatement(sql)) {
             stmt.setInt(1, id);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return new Movies(
-                        rs.getInt("MovieID"),
-                        rs.getString("Title"),
-                        rs.getString("Genre"),
-                        rs.getInt("Duration"),
-                        rs.getString("Director"),
-                        rs.getTimestamp("ReleaseDate").toLocalDateTime(),
-                        rs.getBytes("Image")
-                );
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new Movies(
+                            rs.getInt("MovieID"),
+                            rs.getString("Title"),
+                            rs.getString("Genre"),
+                            rs.getInt("Duration"),
+                            rs.getString("Director"),
+                            rs.getDate("ReleaseDate"),
+                            rs.getString("Image")
+                    );
+                }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return null;
     }
 
     // Lấy tất cả phim
-    public List<Movies> getAllMovies() {
+    public List<Movies> getAllMovies() throws SQLException {
+        ensureConnection();
+
         List<Movies> movieList = new ArrayList<>();
         String sql = "SELECT * FROM Movies";
         try (PreparedStatement stmt = con.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
-
             while (rs.next()) {
                 Movies movie = new Movies(
                         rs.getInt("MovieID"),
@@ -152,41 +154,45 @@ public class Movies_DAO {
                         rs.getString("Genre"),
                         rs.getInt("Duration"),
                         rs.getString("Director"),
-                        rs.getTimestamp("DeleaseDate").toLocalDateTime(),
-                        rs.getBytes("Image")
+                        rs.getDate("ReleaseDate"),
+                        rs.getString("Image")
                 );
                 movieList.add(movie);
             }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return movieList;
     }
-    public List<Movies> searchMoviesByTitle(String keyword) {
+
+    // Tìm kiếm phim theo tiêu đề
+    public List<Movies> searchMoviesByTitle(String keyword) throws SQLException {
+        ensureConnection();
+
         List<Movies> list = new ArrayList<>();
-        String sql = "SELECT * FROM Movies WHERE title LIKE ?";
-        
+        String sql = "SELECT * FROM Movies WHERE Title LIKE ?";
         try (PreparedStatement stmt = con.prepareStatement(sql)) {
             stmt.setString(1, "%" + keyword + "%");
-            ResultSet rs = stmt.executeQuery();
-
-            while (rs.next()) {
-                Movies movie = new Movies(
-                    rs.getInt("MovieID"),
-                    rs.getString("Title"),
-                    rs.getString("Genre"),
-                    rs.getInt("Duration"),
-                    rs.getString("Director"),
-                    rs.getTimestamp("ReleaseDate").toLocalDateTime(),
-                    rs.getBytes("Image") 
-                );
-                list.add(movie);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Movies movie = new Movies(
+                            rs.getInt("MovieID"),
+                            rs.getString("Title"),
+                            rs.getString("Genre"),
+                            rs.getInt("Duration"),
+                            rs.getString("Director"),
+                            rs.getDate("ReleaseDate"),
+                            rs.getString("Image")
+                    );
+                    list.add(movie);
+                }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return list;
     }
 
+    // Đóng kết nối (nếu cần)
+    public void closeConnection() throws SQLException {
+        if (con != null && !con.isClosed()) {
+            con.close();
+        }
+    }
 }
