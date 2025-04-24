@@ -1,51 +1,49 @@
 package service;
 
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
 
-import dao.UserDAO;
+import dbs.connectDB;
 import model.Users;
 
 public class UserManager {
-    private UserDAO userDAO;
+    private Connection connection;
 
-    // Constructor
-    public UserManager() {
-        this.userDAO = new UserDAO();
+    public UserManager(Connection connection) {
+        this.connection = connection;
     }
 
-    // Lấy tất cả người dùng (Read - danh sách)
-    public List<Users> getAllUsers() throws SQLException {
-        return userDAO.getAllUsers();
-    }
-
-    // Lấy người dùng theo ID (Read - chi tiết)
-    public Users getUser(int userID) throws SQLException {
-        Users user = userDAO.getUserById(userID);
-        if (user == null) {
-            throw new SQLException("Không tìm thấy người dùng với ID: " + userID);
-        }
-        return user;
-    }
-
-    // Đăng nhập người dùng (Read - đăng nhập)
     public Users loginUser(String username, String password) throws SQLException {
-        Users user = userDAO.loginUser(username, password);
-        if (user == null) {
-            throw new SQLException("Tên đăng nhập hoặc mật khẩu không đúng");
+        if (connection == null || connection.isClosed()) {
+            try {
+                connection = connectDB.getConnection();
+            } catch (RuntimeException e) {
+                throw new SQLException("Không thể lấy lại kết nối tới cơ sở dữ liệu: " + e.getMessage(), e);
+            }
+        }
+
+        if (connection == null || connection.isClosed()) {
+            throw new SQLException("Kết nối tới cơ sở dữ liệu không hợp lệ (null hoặc đã đóng).");
+        }
+
+        Users user = null;
+        String query = "{CALL sp_LoginUser(?, ?)}";
+        
+        try (CallableStatement stmt = connection.prepareCall(query)) {
+            stmt.setString(1, username);
+            stmt.setString(2, password);
+            
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                user = new Users();
+                user.setUserID(rs.getInt("userID"));
+                user.setUserName(rs.getString("username"));
+                user.setPasswordHash(rs.getString("passwordHash")); // Sửa thành passwordHash
+                user.setRoleID(rs.getInt("roleID"));
+            }
         }
         return user;
-    }
-
-    // Cập nhật người dùng (Update)
-    public void updateUser(Users user) throws SQLException {
-        // Kiểm tra logic nghiệp vụ
-        if (user.getUserName() == null || user.getUserName().trim().isEmpty()) {
-            throw new IllegalArgumentException("Tên đăng nhập không được để trống");
-        }
-        if (user.getPasswordHash() == null || user.getPasswordHash().trim().isEmpty()) {
-            throw new IllegalArgumentException("Mật khẩu không được để trống");
-        }
-        userDAO.updateUser(user);
     }
 }

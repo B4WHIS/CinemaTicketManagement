@@ -1,5 +1,5 @@
-
-import java.time.LocalDateTime;
+package model;
+import java.sql.Date;
 
 
 public class Movies {
@@ -8,12 +8,12 @@ public class Movies {
     private String genre;
     private int duration;
     private String director;
-    private LocalDateTime releaseDate;
-    private byte[] image;
+    private Date releaseDate;
+    private String image;
 
     public Movies(){
     }
-    public Movies(int movieID, String title, String genre, int duration, String director, LocalDateTime releaseDate, byte[] image){
+    public Movies(int movieID, String title, String genre, int duration, String director, Date releaseDate, String image){
         this.movieID = movieID;
         this.title = title;
         this.genre = genre;
@@ -52,20 +52,17 @@ public class Movies {
     public void setDirector(String director) {
         this.director = director;
     }
-    public LocalDateTime getReleaseDate() {
+    public Date getReleaseDate() {
         return releaseDate;
     }
-    public void setReleaseDate(LocalDateTime releaseDate) {
-        this.releaseDate = releaseDate;
+    public void setReleaseDate(Date date) {
+        this.releaseDate = date;
     }
-    public byte[] getImage() {
+    public String getImage() {
         return image;
     }
-    public void setImage(byte[] image) {
+    public void setImage(String image) {
         this.image = image;
     }
   
-
-   
-
 }

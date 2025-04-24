@@ -1,42 +1,48 @@
 package gui;
 
 import java.awt.BorderLayout;
+import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
+import java.sql.Connection;
 import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
 
 import model.Movies;
+import model.Users;
 import service.MovieManager;
 
-public class mainGUI extends JFrame {
+public class mainGUI extends JPanel {
     private JPanel moviesPanel;
     private JTextField searchField;
     private MovieManager movieManager;
+    private CardLayout cardLayout;
+    private JPanel mainPanel;
+    private Connection connection;
+    private Users user;
 
-    public mainGUI() {
-        movieManager = new MovieManager();
+    public mainGUI(Connection connection, CardLayout cardLayout, JPanel mainPanel, Users user) {
+        this.connection = connection;
+        this.cardLayout = cardLayout;
+        this.mainPanel = mainPanel;
+        this.user = user;
+        this.movieManager = new MovieManager(connection);
 
-        setTitle("Movie Ticket System");
-        setSize(1000, 700);
-        setLocationRelativeTo(null);
         setLayout(new BorderLayout());
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         // ==== Menu ngang ====
         JPanel menuPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -48,8 +54,8 @@ public class mainGUI extends JFrame {
         add(menuPanel, BorderLayout.NORTH);
 
         // ==== Panel chính ====
-        JPanel mainPanel = new JPanel(new BorderLayout());
-        add(mainPanel, BorderLayout.CENTER);
+        JPanel centerPanel = new JPanel(new BorderLayout());
+        add(centerPanel, BorderLayout.CENTER);
 
         // ==== Tìm kiếm ====
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -59,12 +65,12 @@ public class mainGUI extends JFrame {
         searchPanel.add(new JLabel("Tìm phim:"));
         searchPanel.add(searchField);
         searchPanel.add(searchBtn);
-        mainPanel.add(searchPanel, BorderLayout.NORTH);
+        centerPanel.add(searchPanel, BorderLayout.NORTH);
 
         // ==== Danh sách phim ====
         moviesPanel = new JPanel(new GridLayout(0, 5, 10, 10));
         JScrollPane scrollPane = new JScrollPane(moviesPanel);
-        mainPanel.add(scrollPane, BorderLayout.CENTER);
+        centerPanel.add(scrollPane, BorderLayout.CENTER);
 
         // ==== Sidebar ====
         JPanel sidebar = new JPanel();
@@ -82,7 +88,7 @@ public class mainGUI extends JFrame {
         avatar.setBackground(Color.GRAY);
         avatar.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel nameLabel = new JLabel("Tên nhân viên", SwingConstants.CENTER);
+        JLabel nameLabel = new JLabel(user.getUserName(), SwingConstants.CENTER); // Hiển thị tên người dùng
         nameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         sidebar.add(welcomeLabel);
@@ -91,43 +97,45 @@ public class mainGUI extends JFrame {
         sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
         sidebar.add(nameLabel);
 
-        mainPanel.add(sidebar, BorderLayout.EAST);
+        centerPanel.add(sidebar, BorderLayout.EAST);
 
         // Tải toàn bộ phim ban đầu
         loadMovies("");
-        setVisible(true);
     }
 
     private void loadMovies(String keyword) {
         moviesPanel.removeAll();
-        List<Movies> movies = movieManager.getAllMovies();
+        try {
+            List<Movies> movies = movieManager.getAllMovies();
+            for (Movies movie : movies) {
+                if (!keyword.isEmpty() && !movie.getTitle().toLowerCase().contains(keyword.toLowerCase())) {
+                    continue;
+                }
 
-        for (Movies movie : movies) {
-            if (!keyword.isEmpty() && !movie.getTitle().toLowerCase().contains(keyword.toLowerCase())) {
-                continue;
+                JPanel movieCard = new JPanel(new BorderLayout());
+                movieCard.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+
+                JLabel img = new JLabel(movie.getTitle(), SwingConstants.CENTER);
+                img.setPreferredSize(new Dimension(200, 300));
+                img.setOpaque(true);
+                img.setBackground(Color.LIGHT_GRAY);
+
+                JButton btnBuy = new JButton("Đặt vé");
+                btnBuy.addActionListener(e -> {
+                    // Mở MovieDetailFrame với movieID
+                    cardLayout.show(mainPanel, "MovieDetail");
+                });
+
+                movieCard.add(img, BorderLayout.CENTER);
+                movieCard.add(btnBuy, BorderLayout.SOUTH);
+                moviesPanel.add(movieCard);
             }
-
-            JPanel movieCard = new JPanel(new BorderLayout());
-            movieCard.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-
-            JLabel img = new JLabel(movie.getTitle(), SwingConstants.CENTER);
-            img.setPreferredSize(new Dimension(120, 180));
-            img.setOpaque(true);
-            img.setBackground(Color.LIGHT_GRAY); // Placeholder cho hình ảnh
-
-            JButton btnBuy = new JButton("Đặt vé");
-
-            movieCard.add(img, BorderLayout.CENTER);
-            movieCard.add(btnBuy, BorderLayout.SOUTH);
-            moviesPanel.add(movieCard);
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Không thể tải danh sách phim: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
 
         moviesPanel.revalidate();
         moviesPanel.repaint();
     }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(mainGUI::new);
-    }
 }
-
