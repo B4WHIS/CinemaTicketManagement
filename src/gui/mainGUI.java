@@ -125,9 +125,14 @@ public class mainGUI extends JFrame {
         moviesPanel.revalidate();
         moviesPanel.repaint();
     }
-
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(mainGUI::new);
+        SwingUtilities.invokeLater(() -> {
+            try {
+                new mainGUI();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 }
 

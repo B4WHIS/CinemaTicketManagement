@@ -74,8 +74,6 @@ public class AddMovieFrame extends JFrame {
             dispose();
         } catch (NumberFormatException | ParseException ex) {
             JOptionPane.showMessageDialog(this, "Dữ liệu không hợp lệ: " + ex.getMessage());
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Lỗi khi thêm phim: " + ex.getMessage());
         }
     }
 
