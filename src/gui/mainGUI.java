@@ -7,13 +7,15 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.GridLayout;
+import java.awt.Image;
+import java.io.File;
 import java.sql.Connection;
 import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -34,6 +36,7 @@ public class mainGUI extends JPanel {
     private JPanel mainPanel;
     private Connection connection;
     private Users user;
+//    private AddMoviePanel addMoviePanel; // Lưu instance của AddMoviePanel
 
     public mainGUI(Connection connection, CardLayout cardLayout, JPanel mainPanel, Users user) {
         this.connection = connection;
@@ -44,11 +47,23 @@ public class mainGUI extends JPanel {
 
         setLayout(new BorderLayout());
 
+        // Khởi tạo AddMoviePanel một lần
+        addMoviePanel = new AddMoviePanel(connection, this);
+        mainPanel.add(addMoviePanel, "AddMovie");
+
         // ==== Menu ngang ====
         JPanel menuPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         String[] menuItems = {"Dashboard", "Add Movie", "Available Movies", "Edit Screening", "Customers"};
         for (String item : menuItems) {
             JButton btn = new JButton(item);
+            if (item.equals("Add Movie")) {
+                btn.addActionListener(e -> {
+                    System.out.println("Opening AddMoviePanel");
+                    cardLayout.show(mainPanel, "AddMovie");
+                });
+            } else if (item.equals("Available Movies")) {
+                btn.addActionListener(e -> showMoviesPanel());
+            }
             menuPanel.add(btn);
         }
         add(menuPanel, BorderLayout.NORTH);
@@ -68,7 +83,8 @@ public class mainGUI extends JPanel {
         centerPanel.add(searchPanel, BorderLayout.NORTH);
 
         // ==== Danh sách phim ====
-        moviesPanel = new JPanel(new GridLayout(0, 5, 10, 10));
+        moviesPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        moviesPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         JScrollPane scrollPane = new JScrollPane(moviesPanel);
         centerPanel.add(scrollPane, BorderLayout.CENTER);
 
@@ -88,7 +104,7 @@ public class mainGUI extends JPanel {
         avatar.setBackground(Color.GRAY);
         avatar.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel nameLabel = new JLabel(user.getUserName(), SwingConstants.CENTER); // Hiển thị tên người dùng
+        JLabel nameLabel = new JLabel(user.getUserName(), SwingConstants.CENTER);
         nameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         sidebar.add(welcomeLabel);
@@ -99,37 +115,94 @@ public class mainGUI extends JPanel {
 
         centerPanel.add(sidebar, BorderLayout.EAST);
 
+        // Thêm DetailFilm_GUI vào mainPanel
+        try {
+            mainPanel.add(new DetailFilm_GUI(connection, -1), "MovieDetail");
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Không thể khởi tạo trang chi tiết phim: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+
+        // Thêm moviesPanel vào mainPanel
+        mainPanel.add(moviesPanel, "Movies");
+
         // Tải toàn bộ phim ban đầu
+        showMoviesPanel();
+    }
+
+    public void showMoviesPanel() {
+        cardLayout.show(mainPanel, "Movies");
         loadMovies("");
     }
 
-    private void loadMovies(String keyword) {
+    public void loadMovies(String keyword) {
         moviesPanel.removeAll();
         try {
             List<Movies> movies = movieManager.getAllMovies();
+            boolean foundMovies = false;
+
             for (Movies movie : movies) {
                 if (!keyword.isEmpty() && !movie.getTitle().toLowerCase().contains(keyword.toLowerCase())) {
                     continue;
                 }
 
+                foundMovies = true;
+
                 JPanel movieCard = new JPanel(new BorderLayout());
                 movieCard.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+                movieCard.setPreferredSize(new Dimension(200, 350));
 
-                JLabel img = new JLabel(movie.getTitle(), SwingConstants.CENTER);
+                JLabel img = new JLabel();
                 img.setPreferredSize(new Dimension(200, 300));
-                img.setOpaque(true);
-                img.setBackground(Color.LIGHT_GRAY);
+                img.setHorizontalAlignment(SwingConstants.CENTER);
+
+                if (movie.getImage() != null && !movie.getImage().isEmpty()) {
+                    System.out.println("Loading image for movie: " + movie.getTitle() + ", path: " + movie.getImage());
+                    File imageFile = new File(movie.getImage());
+                    if (imageFile.exists()) {
+                        ImageIcon icon = new ImageIcon(movie.getImage());
+                        Image scaledImage = icon.getImage().getScaledInstance(200, 300, Image.SCALE_SMOOTH);
+                        img.setIcon(new ImageIcon(scaledImage));
+                    } else {
+                        System.err.println("Image file not found: " + movie.getImage());
+                        img.setText(movie.getTitle());
+                        img.setOpaque(true);
+                        img.setBackground(Color.LIGHT_GRAY);
+                        img.setFont(new Font("Arial", Font.PLAIN, 14));
+                    }
+                } else {
+                    System.out.println("No image for movie: " + movie.getTitle());
+                    img.setText(movie.getTitle());
+                    img.setOpaque(true);
+                    img.setBackground(Color.LIGHT_GRAY);
+                    img.setFont(new Font("Arial", Font.PLAIN, 14));
+                }
 
                 JButton btnBuy = new JButton("Đặt vé");
+                btnBuy.setBackground(new Color(0, 102, 204));
+                btnBuy.setForeground(Color.WHITE);
                 btnBuy.addActionListener(e -> {
-                    // Mở MovieDetailFrame với movieID
-                    cardLayout.show(mainPanel, "MovieDetail");
+                    try {
+                        DetailFilm_GUI detailPanel = new DetailFilm_GUI(connection, movie.getMovieID());
+                        mainPanel.add(detailPanel, "MovieDetail");
+                        cardLayout.show(mainPanel, "MovieDetail");
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        JOptionPane.showMessageDialog(this, "Không thể hiển thị chi tiết phim: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    }
                 });
 
                 movieCard.add(img, BorderLayout.CENTER);
                 movieCard.add(btnBuy, BorderLayout.SOUTH);
                 moviesPanel.add(movieCard);
             }
+
+            if (!foundMovies && !keyword.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Không tìm thấy phim nào phù hợp với từ khóa: " + keyword, "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                loadMovies("");
+                searchField.setText("");
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, "Không thể tải danh sách phim: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
