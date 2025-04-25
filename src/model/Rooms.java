@@ -1,6 +1,5 @@
 package model;
 
-
 public class Rooms {
     private int roomID;
     private String roomName;
@@ -12,8 +11,8 @@ public class Rooms {
         this.capacity = capacity;
         this.type = type;
     }
-
-   public Rooms(){}
+   public Rooms() {}
+   public Rooms(int roomID2, String name, int capacity2){}
 
    public int getRoomID() {
     return roomID;

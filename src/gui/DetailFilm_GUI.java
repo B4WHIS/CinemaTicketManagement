@@ -2,18 +2,18 @@ package gui;
 
 import javax.swing.*;
 import java.awt.*;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
 import model.Movies;
 import model.Rooms;
 import model.Showtimes;
-import model.Showtimes;
 import service.MovieManager;
 import service.RoomManager;
 import service.ShowTimeManager;
 
-public class DetailFilm_GUI extends JFrame {
+public class DetailFilm_GUI extends JPanel {
     private MovieManager movieManager;
     private RoomManager roomManager;
     private ShowTimeManager showtimeManager;
@@ -22,23 +22,22 @@ public class DetailFilm_GUI extends JFrame {
     private JComboBox<String> roomComboBox;
     private JComboBox<String> dateComboBox;
     private JComboBox<String> timeComboBox;
-    private JTextArea movieDetails;
+    private JLabel quantityLabel;
+    private JLabel priceLabel;
+    private int selectedMovieID;
+    private int ticketQuantity = 0;
+    private static final int TICKET_PRICE = 50000; // Giá vé giả định (VND)
 
-    public DetailFilm_GUI() throws SQLException {
-        movieManager = new MovieManager();
-        roomManager = new RoomManager();
-        showtimeManager = new ShowTimeManager();
+    public DetailFilm_GUI(Connection connection, int movieID) throws SQLException {
+        this.selectedMovieID = movieID;
+        this.movieManager = new MovieManager(connection);
+        this.roomManager = new RoomManager();
+        this.showtimeManager = new ShowTimeManager();
 
-        setTitle("Movie Booking");
-        setSize(1000, 600);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
         add(createNavigationBar(), BorderLayout.NORTH);
         add(createMainContent(), BorderLayout.CENTER);
-
-        setVisible(true);
     }
 
     private JPanel createNavigationBar() {
@@ -51,15 +50,15 @@ public class DetailFilm_GUI extends JFrame {
         return navPanel;
     }
 
-    private JPanel createMainContent() {
+    private JPanel createMainContent() throws SQLException {
         movieComboBox = new JComboBox<>();
 
         JPanel leftPanel = createMovieInfoPanel();
         JPanel rightPanel = createBookingPanel();
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, rightPanel);
-        splitPane.setDividerLocation(600); // Phần thông tin phim chiếm 600px, phần đặt vé còn lại
-        splitPane.setResizeWeight(0.7); // Ưu tiên phần bên trái
+        splitPane.setDividerLocation(600);
+        splitPane.setResizeWeight(0.7);
         splitPane.setContinuousLayout(true);
 
         JPanel contentPanel = new JPanel(new BorderLayout());
@@ -68,9 +67,7 @@ public class DetailFilm_GUI extends JFrame {
         return contentPanel;
     }
 
-   
-
-    private JPanel createBookingPanel() {
+    private JPanel createBookingPanel() throws SQLException {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
@@ -83,7 +80,6 @@ public class DetailFilm_GUI extends JFrame {
         JLabel dateLabel = new JLabel("Ngày chiếu:");
         JLabel timeLabel = new JLabel("Giờ chiếu:");
 
-        // Căn trái các thành phần
         roomLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         roomComboBox.setAlignmentX(Component.LEFT_ALIGNMENT);
         dateLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -92,7 +88,6 @@ public class DetailFilm_GUI extends JFrame {
         timeComboBox.setAlignmentX(Component.LEFT_ALIGNMENT);
         bookButton.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // Set kích thước cố định
         roomComboBox.setMaximumSize(new Dimension(200, 30));
         dateComboBox.setMaximumSize(new Dimension(200, 30));
         timeComboBox.setMaximumSize(new Dimension(200, 30));
@@ -107,13 +102,38 @@ public class DetailFilm_GUI extends JFrame {
         panel.add(timeComboBox);
         panel.add(Box.createVerticalStrut(20));
 
-        // Số lượng vé
         JPanel quantityPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JLabel quantityTextLabel = new JLabel("Số lượng vé:");
         JButton minusButton = new JButton("-");
-        JLabel quantityLabel = new JLabel("0");
+        quantityLabel = new JLabel("0");
         JButton plusButton = new JButton("+");
-        JLabel priceLabel = new JLabel("0 VND");
+        priceLabel = new JLabel("0 VND");
+
+        minusButton.addActionListener(e -> {
+            if (ticketQuantity > 0) {
+                ticketQuantity--;
+                quantityLabel.setText(String.valueOf(ticketQuantity));
+                priceLabel.setText((ticketQuantity * TICKET_PRICE) + " VND");
+            }
+        });
+
+        plusButton.addActionListener(e -> {
+            ticketQuantity++;
+            quantityLabel.setText(String.valueOf(ticketQuantity));
+            priceLabel.setText((ticketQuantity * TICKET_PRICE) + " VND");
+        });
+
+        bookButton.addActionListener(e -> {
+            if (ticketQuantity == 0) {
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn số lượng vé!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            if (roomComboBox.getSelectedItem() == null || dateComboBox.getSelectedItem() == null || timeComboBox.getSelectedItem() == null) {
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn phòng, ngày và giờ chiếu!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            JOptionPane.showMessageDialog(this, "Đặt vé thành công!\nSố lượng: " + ticketQuantity + "\nTổng giá: " + (ticketQuantity * TICKET_PRICE) + " VND", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+        });
 
         quantityPanel.add(quantityTextLabel);
         quantityPanel.add(minusButton);
@@ -122,7 +142,6 @@ public class DetailFilm_GUI extends JFrame {
         quantityPanel.add(Box.createHorizontalStrut(20));
         quantityPanel.add(priceLabel);
 
-        // Căn trái panel này luôn
         quantityPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         panel.add(quantityPanel);
@@ -133,25 +152,38 @@ public class DetailFilm_GUI extends JFrame {
         loadRooms();
         loadShowtimes();
 
-        movieComboBox.addActionListener(e -> updateMovieInfo());
+        movieComboBox.addActionListener(e -> {
+            try {
+                selectedMovieID = Integer.parseInt(movieComboBox.getSelectedItem().toString().split(" - ")[0]);
+                createMovieInfoPanel();
+                loadShowtimes();
+                revalidate();
+                repaint();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Không thể cập nhật thông tin phim: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            }
+        });
 
         return panel;
     }
 
-    private JPanel createMovieInfoPanel() {
+    private JPanel createMovieInfoPanel() throws SQLException {
         JPanel infoPanel = new JPanel(new BorderLayout());
 
-        // Lấy thông tin phim đang được chọn
-        if (movieComboBox.getSelectedItem() == null) {
+        if (selectedMovieID == -1 && movieComboBox.getItemCount() == 0) {
             infoPanel.add(new JLabel("Chưa có phim nào được chọn"), BorderLayout.CENTER);
             return infoPanel;
         }
 
-        String selected = movieComboBox.getSelectedItem().toString();
-        int movieId = Integer.parseInt(selected.split(" - ")[0]);
+        int movieId = selectedMovieID != -1 ? selectedMovieID : Integer.parseInt(movieComboBox.getSelectedItem().toString().split(" - ")[0]);
         Movies movie = movieManager.getMovieByID(movieId);
 
-        // Poster từ byte[] image trong database
+        if (movie == null) {
+            infoPanel.add(new JLabel("Phim không tồn tại"), BorderLayout.CENTER);
+            return infoPanel;
+        }
+
         JLabel posterLabel = new JLabel();
         if (movie.getImage() != null) {
             ImageIcon icon = new ImageIcon(movie.getImage());
@@ -162,7 +194,6 @@ public class DetailFilm_GUI extends JFrame {
         }
         infoPanel.add(posterLabel, BorderLayout.WEST);
 
-        // Movie details - HTML hiển thị thông tin
         JEditorPane editorPane = new JEditorPane();
         editorPane.setContentType("text/html");
         editorPane.setEditable(false);
@@ -181,14 +212,16 @@ public class DetailFilm_GUI extends JFrame {
         return infoPanel;
     }
 
-
-    private void loadMovies() {
+    private void loadMovies() throws SQLException {
         List<Movies> movies = movieManager.getAllMovies();
         movieComboBox.removeAllItems();
         for (Movies m : movies) {
-            movieComboBox.addItem(m.getMovieID() + " - " + m.getTitle());
+            String item = m.getMovieID() + " - " + m.getTitle();
+            movieComboBox.addItem(item);
+            if (m.getMovieID() == selectedMovieID) {
+                movieComboBox.setSelectedItem(item);
+            }
         }
-        updateMovieInfo();
     }
 
     private void loadRooms() {
@@ -199,42 +232,16 @@ public class DetailFilm_GUI extends JFrame {
         }
     }
 
-    private void loadShowtimes() {
-        List<Showtimes> showtimes = showtimeManager.getAllShowtimes();
+    private void loadShowtimes() throws SQLException {
         dateComboBox.removeAllItems();
         timeComboBox.removeAllItems();
+        if (selectedMovieID == -1) {
+            return; // Không tải lịch chiếu nếu movieID không hợp lệ
+        }
+        List<Showtimes> showtimes = showtimeManager.getShowtimesByMovie(selectedMovieID);
         for (Showtimes st : showtimes) {
             dateComboBox.addItem(st.getdateTime().toString());
             timeComboBox.addItem(st.getStartTime().toString());
         }
-    }
-
-    private void updateMovieInfo() {
-        if (movieComboBox.getSelectedItem() != null) {
-            String selected = movieComboBox.getSelectedItem().toString();
-            int movieId = Integer.parseInt(selected.split(" - ")[0]);
-            Movies movie = movieManager.getMovieByID(movieId);
-
-            if (movie != null) {
-                movieDetails.setText(
-                    "Tên phim: " + movie.getTitle() + "\n" +
-                    "Thể loại: " + movie.getGenre() + "\n" +
-                    "Thời lượng: " + movie.getDuration() + " phút\n" +
-                    "Đạo diễn: " + movie.getDirector() + "\n" 
-                   
-                );
-            }
-        }
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-			try {
-				new DetailFilm_GUI();
-			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		});
     }
 }

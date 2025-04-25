@@ -133,7 +133,7 @@ public class Rooms_DAO {
                 int capacity = rs.getInt("Capacity");
                 String type = rs.getString("Type");
 
-                Rooms room = new Rooms(roomID, roomName, capacity, type);
+                Rooms room = new Rooms(roomID,  roomName, capacity, type);
                 rooms.add(room);
             }
 

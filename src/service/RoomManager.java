@@ -1,7 +1,6 @@
 package service;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
 
 import dao.Rooms_DAO;
@@ -9,7 +8,8 @@ import dbs.connectDB;
 import model.Rooms;
 
 public class RoomManager {
-	 private Rooms_DAO roomDAO;
+    private Rooms_DAO roomDAO;
+
 	public RoomManager() {
         Connection con = connectDB.getConnection();
 		this.roomDAO = new Rooms_DAO(con);
