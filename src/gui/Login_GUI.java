@@ -104,10 +104,9 @@ public class Login_GUI extends JFrame implements ActionListener {
             try {
                 Users user = userManager.loginUser(username, password);
                 if (user != null) {
-                    // Đăng nhập thành công, mở MainFrame
                     MainFrame mainFrame = new MainFrame(connection, user);
                     mainFrame.setVisible(true);
-                    dispose(); // Đóng Login_GUI
+                    dispose();
                 } else {
                     JOptionPane.showMessageDialog(this, "Đăng nhập thất bại!");
                 }

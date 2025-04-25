@@ -8,8 +8,8 @@ public class Showtimes {
     private int showtimeID;
     private Movies movie;
     private Rooms room;
-    private Time startTime; // Sửa từ Date sang Time
-    private Date dateTime;  // Giữ Date nếu DateTime là DATE
+    private Time startTime;
+    private Date dateTime;
     private BigDecimal price;
 
     public Showtimes() {
@@ -24,15 +24,18 @@ public class Showtimes {
         this.price = price;
     }
 
-  
+    // Hoàn thiện constructor
+    public Showtimes(int showtimeID, int roomID, Movies movie, Date date, Time time, double price) {
+        this.showtimeID = showtimeID;
+        this.movie = movie;
+        this.room = new Rooms();
+        this.room.setRoomID(roomID); // Giả sử Rooms có phương thức setRoomID
+        this.startTime = time;
+        this.dateTime = date;
+        this.price = BigDecimal.valueOf(price); // Chuyển double thành BigDecimal
+    }
 
-	
-
-	public Showtimes(int int1, int int2, Movies movie2, Date date, Time time, double double1) {
-		// TODO Auto-generated constructor stub
-	}
-
-	public int getShowTimeID() {
+    public int getShowTimeID() {
         return showtimeID;
     }
 
