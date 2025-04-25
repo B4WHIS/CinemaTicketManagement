@@ -1,21 +1,19 @@
 package service;
 
+import java.sql.CallableStatement;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
-import com.microsoft.sqlserver.jdbc.SQLServerConnection;
-
 import dao.Movies_DAO;
-<<<<<<< HEAD
-=======
 import dbs.connectDB;
->>>>>>> phim_phong_lichChieu
 import model.Movies;
 
 public class MovieManager {
 	private Movies_DAO movieDao;
-	public MovieManager() {
+	public MovieManager(Connection connection) {
 		try {
 			Connection con = connectDB.getConnection();
 			this.movieDao = new Movies_DAO(con);
@@ -23,57 +21,26 @@ public class MovieManager {
 			// TODO: handle exception
 			e.printStackTrace();
 		}
-		
+		/////dsfhihds
 	}
-	public boolean addMovie(Movies movie) {
+	public boolean addMovie(Movies movie) throws SQLException {
 		return movieDao.addMovie(movie);
 	}
-	public boolean updateMovie(Movies movie) {
+	public boolean updateMovie(Movies movie) throws SQLException {
 		 return movieDao.updateMovie(movie);
 	}
 	public boolean deleteMovie(int movieID) throws SQLException {
 		 return movieDao.deleteMovie(movieID);
 	}
-	 public Movies getMovieByID(int id) {
+	 public Movies getMovieByID(int id) throws SQLException {
 	        return movieDao.getMovieByID(id);
 	    }
 
-<<<<<<< HEAD
-    public MovieManager() {
-        try {
-            Connection conn = SQLServerConnection.getConnection();
-            this.movieDAO = new Movies_DAO(conn);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public boolean addMovie(Movies movie) throws SQLException {
-        return movieDAO.addMovie(movie);
-    }
-
-    public boolean updateMovie(Movies movie) throws SQLException {
-        return movieDAO.updateMovie(movie);
-    }
-
-    public boolean deleteMovie(int movieID) {
-        try {
-            return movieDAO.deleteMovie(movieID);
-        } catch (SQLException e) {
-            return false;
-        }
-    }
-
-    public Movies getMovieByID(int id) {
-        return movieDAO.getMovieByID(id);
-    }
-
-    public List<Movies> getAllMovies() {
-        return movieDAO.getAllMovies();
-    }
-=======
-	    public List<Movies> getAllMovies() {
+	    public List<Movies> getAllMovies() throws SQLException {
 	        return movieDao.getAllMovies();
 	    }
->>>>>>> phim_phong_lichChieu
+	    public List<Movies> searchMoviesByTitle(String keyword) throws SQLException {
+	        return movieDao.searchMoviesByTitle(keyword);
+	    }
+
 }

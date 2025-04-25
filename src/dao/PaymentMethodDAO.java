@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PaymentMethodDAO {
-    
+
     private Connection getConnection() throws SQLException {
         String url = "jdbc:mysql://localhost:1433/databaseName=CinemaTickerManagement"; 
         String user = "sa";

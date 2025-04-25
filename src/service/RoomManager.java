@@ -1,23 +1,15 @@
 package service;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
 
-import com.microsoft.sqlserver.jdbc.SQLServerConnection;
-
 import dao.Rooms_DAO;
-<<<<<<< HEAD
-import model.Rooms;
-public class RoomManager {
-    private Rooms_DAO roomDAO;
-=======
 import dbs.connectDB;
 import model.Rooms;
->>>>>>> phim_phong_lichChieu
 
 public class RoomManager {
-	 private Rooms_DAO roomDAO;
+    private Rooms_DAO roomDAO;
+
 	public RoomManager() {
         Connection con = connectDB.getConnection();
 		this.roomDAO = new Rooms_DAO(con);
