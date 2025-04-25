@@ -1,12 +1,12 @@
 package gui;
 
-import model.Product_Orders;
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.*;
+import model.Product_Orders;
 
 public class ConfirmationScreen extends JFrame implements ActionListener {
     private List<Product_Orders> cart;
@@ -18,11 +18,7 @@ public class ConfirmationScreen extends JFrame implements ActionListener {
         initUI();
     }
 
-    public ConfirmationScreen() {
-		// TODO Auto-generated constructor stub
-	}
-
-	private void initUI() {
+    private void initUI() {
         setTitle("Xác Nhận Đặt Hàng");
         setSize(1500, 1000);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

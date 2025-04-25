@@ -5,6 +5,8 @@ import java.util.List;
 
 import com.microsoft.sqlserver.jdbc.SQLServerConnection;
 
+
+
 import dao.Showtimes_DAO;
 import dbs.connectDB;
 import model.Showtimes;
@@ -28,16 +30,18 @@ public class ShowTimeManager {
         return showtimeDAO.deleteShowtime(id);
     }
 
+    
     public static Showtimes getShowtimeByID(int id) throws SQLException {
         return showtimeDAO.getShowtimeByID(id);
     }
 
+    
     public List<Showtimes> getShowtimesByMovie(int movieID) throws SQLException {
         return showtimeDAO.getShowtimesByMovie(movieID);
     }
 
+	
 	public List<Showtimes> getAllShowtimes() throws SQLException {
-		
 		return showtimeDAO.getAllShowtimes();
 	}
 

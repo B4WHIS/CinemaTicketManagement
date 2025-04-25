@@ -3,13 +3,10 @@ package gui;
 import java.awt.CardLayout;
 import java.sql.Connection;
 import java.util.ArrayList;
-
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-
 import model.Product_Orders;
 import model.Users;
-
 
 public class MainFrame extends JFrame {
     private CardLayout cardLayout;

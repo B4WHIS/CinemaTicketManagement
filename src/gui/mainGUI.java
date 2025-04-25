@@ -11,7 +11,6 @@ import java.awt.Image;
 import java.io.File;
 import java.sql.Connection;
 import java.util.List;
-
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -23,7 +22,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
-
 import model.Movies;
 import model.Users;
 import service.MovieManager;
@@ -36,7 +34,7 @@ public class mainGUI extends JPanel {
     private JPanel mainPanel;
     private Connection connection;
     private Users user;
-//    private AddMoviePanel addMoviePanel; // Lưu instance của AddMoviePanel
+    private AddMoviePanel addMoviePanel; // Lưu instance của AddMoviePanel
 
     public mainGUI(Connection connection, CardLayout cardLayout, JPanel mainPanel, Users user) {
         this.connection = connection;

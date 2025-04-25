@@ -2,22 +2,20 @@ package model;
 
 import java.math.BigDecimal;
 import java.sql.Date;
+import java.sql.Time;
 
 public class Showtimes {
     private int showtimeID;
     private Movies movie;
     private Rooms room;
-    private Date startTime;
-    private Date dateTime;
+    private Time startTime; // Sửa từ Date sang Time
+    private Date dateTime;  // Giữ Date nếu DateTime là DATE
     private BigDecimal price;
 
-    
-    
     public Showtimes() {
-		
-	}
+    }
 
-	public Showtimes(int showtimeID, Movies movie, Rooms room, Date startTime, Date dateTime, BigDecimal price) {
+    public Showtimes(int showtimeID, Movies movie, Rooms room, Time startTime, Date dateTime, BigDecimal price) {
         this.showtimeID = showtimeID;
         this.movie = movie;
         this.room = room;
@@ -26,7 +24,15 @@ public class Showtimes {
         this.price = price;
     }
 
-    public int getShowTimeID() {
+  
+
+	
+
+	public Showtimes(int int1, int int2, Movies movie2, Date date, Time time, double double1) {
+		// TODO Auto-generated constructor stub
+	}
+
+	public int getShowTimeID() {
         return showtimeID;
     }
 
@@ -50,11 +56,11 @@ public class Showtimes {
         this.room = room;
     }
 
-    public Date getStartTime() {
+    public Time getStartTime() {
         return startTime;
     }
 
-    public void setStartTime(Date startTime) {
+    public void setStartTime(Time startTime) {
         this.startTime = startTime;
     }
 

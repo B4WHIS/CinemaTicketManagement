@@ -7,34 +7,40 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import dao.Movies_DAO;
+import dbs.connectDB;
 import model.Movies;
 
 public class MovieManager {
-    private Connection connection;
+	private Movies_DAO movieDao;
+	public MovieManager(Connection connection) {
+		try {
+			Connection con = connectDB.getConnection();
+			this.movieDao = new Movies_DAO(con);
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+		}
+		/////dsfhihds
+	}
+	public boolean addMovie(Movies movie) throws SQLException {
+		return movieDao.addMovie(movie);
+	}
+	public boolean updateMovie(Movies movie) throws SQLException {
+		 return movieDao.updateMovie(movie);
+	}
+	public boolean deleteMovie(int movieID) throws SQLException {
+		 return movieDao.deleteMovie(movieID);
+	}
+	 public Movies getMovieByID(int id) throws SQLException {
+	        return movieDao.getMovieByID(id);
+	    }
 
-    public MovieManager(Connection connection) {
-        this.connection = connection;
-    }
+	    public List<Movies> getAllMovies() throws SQLException {
+	        return movieDao.getAllMovies();
+	    }
+	    public List<Movies> searchMoviesByTitle(String keyword) throws SQLException {
+	        return movieDao.searchMoviesByTitle(keyword);
+	    }
 
-    public List<Movies> getAllMovies() {
-        List<Movies> movies = new ArrayList<>();
-        String query = "{CALL sp_GetAllMovies}";
-
-        try (CallableStatement stmt = connection.prepareCall(query)) {
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                Movies movie = new Movies();
-                movie.setMovieID(rs.getInt("movieID"));
-                movie.setTitle(rs.getString("title"));
-                movie.setGenre(rs.getString("genre"));
-                movie.setDuration(rs.getInt("duration"));
-                movie.setReleaseDate(rs.getDate("releaseDate"));
-                movie.setDirector(rs.getString("director"));
-                movies.add(movie);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return movies;
-    }
 }
