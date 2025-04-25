@@ -83,18 +83,39 @@ public class SeatStatusDAO {
 
     // Cập nhật trạng thái ghế (dùng sp_UpdateSeatStatus)
     public boolean updateSeatStatus(int showtimeID, int seatID, String status) throws SQLException {
-        ensureConnection();
-
-        try (CallableStatement stmt = con.prepareCall("{call sp_UpdateSeatStatus(?, ?, ?)}")) {
-            stmt.setInt(1, seatID);
-            stmt.setInt(2, showtimeID);
-            stmt.setString(3, status);
-            stmt.execute();
-
-            // Kiểm tra xem có bản ghi được cập nhật hay không
-            try (ResultSet rs = stmt.getResultSet()) {
-                return rs != null && rs.next(); // Trả về true nếu có kết quả
+        // Kiểm tra xem ghế đã được đặt chưa
+        String checkSql = "SELECT Status FROM SeatStatus WHERE ShowtimeID = ? AND SeatID = ?";
+        try (PreparedStatement checkStmt = con.prepareStatement(checkSql)) {
+            checkStmt.setInt(1, showtimeID);
+            checkStmt.setInt(2, seatID);
+            ResultSet rs = checkStmt.executeQuery();
+            
+            if (rs.next()) {
+                // Bản ghi tồn tại, kiểm tra trạng thái
+                String currentStatus = rs.getString("Status");
+                if ("Booked".equalsIgnoreCase(currentStatus)) {
+                    // Ghế đã được đặt, không cho phép cập nhật
+                    System.out.println("Ghế SeatID=" + seatID + " đã được đặt cho ShowtimeID=" + showtimeID);
+                    return false;
+                }
+                // Trường hợp trạng thái khác (nếu có, ví dụ "Available"), không cập nhật mà trả về false
+                // Vì trong rạp chiếu phim, không nên cho phép thay đổi trạng thái ghế đã có
+                return false;
+            } else {
+                // Bản ghi chưa tồn tại, thêm mới với trạng thái Booked
+                String insertSql = "INSERT INTO SeatStatus (ShowtimeID, SeatID, Status) VALUES (?, ?, ?)";
+                try (PreparedStatement insertStmt = con.prepareStatement(insertSql)) {
+                    insertStmt.setInt(1, showtimeID);
+                    insertStmt.setInt(2, seatID);
+                    insertStmt.setString(3, status);
+                    insertStmt.executeUpdate();
+                    System.out.println("Đã thêm trạng thái ghế: ShowtimeID=" + showtimeID + ", SeatID=" + seatID + ", Status=" + status);
+                    return true;
+                }
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false; // Trả về false nếu có lỗi
         }
     }
 

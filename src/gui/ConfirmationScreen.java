@@ -3,35 +3,31 @@ package gui;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
 import java.util.List;
 import javax.swing.*;
 import model.Product_Orders;
 
-public class ConfirmationScreen extends JFrame implements ActionListener {
+public class ConfirmationScreen extends JPanel implements ActionListener { // B: Changed from JFrame to JPanel
     private List<Product_Orders> cart;
     private JButton backButton;
     private JButton confirmButton;
+    private MainFrame mainFrame; // B: Added MainFrame reference
 
-    public ConfirmationScreen(List<Product_Orders> cart) {
+    public ConfirmationScreen(MainFrame mainFrame, List<Product_Orders> cart) { // B: Added MainFrame parameter
+        this.mainFrame = mainFrame; // B: Store MainFrame
         this.cart = cart;
         initUI();
     }
 
     private void initUI() {
-        setTitle("Xác Nhận Đặt Hàng");
-        setSize(1500, 1000);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
-
-        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
-        mainPanel.setBackground(Color.WHITE);
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        setLayout(new BorderLayout(10, 10)); // B: Replaced JFrame setup with JPanel layout
+        setBackground(Color.WHITE);
+        setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         // Tiêu đề
         JLabel titleLabel = new JLabel("Xác Nhận Đặt Hàng", JLabel.CENTER);
         titleLabel.setFont(new Font("Times New Roman", Font.BOLD, 24));
-        mainPanel.add(titleLabel, BorderLayout.NORTH);
+        add(titleLabel, BorderLayout.NORTH);
 
         // Panel nội dung
         JPanel contentPanel = new JPanel();
@@ -62,8 +58,7 @@ public class ConfirmationScreen extends JFrame implements ActionListener {
             contentPanel.add(createInfoRow("Không có món nào"));
         } else {
             for (Product_Orders po : cart) {
-                // Giả lập thông tin sản phẩm
-                String productName = "Sản phẩm " + po.getProductID(); // Tên giả lập
+                String productName = "Sản phẩm " + po.getProductID();
                 String productInfo = String.format("%s x%d (%,.0f)", productName, po.getQuantity(), po.getPrice() * po.getQuantity());
                 contentPanel.add(createInfoRow(productInfo));
                 cartTotal += po.getPrice() * po.getQuantity();
@@ -94,52 +89,32 @@ public class ConfirmationScreen extends JFrame implements ActionListener {
         confirmButton.addActionListener(this);
         navigationPanel.add(confirmButton, BorderLayout.EAST);
 
-        mainPanel.add(new JScrollPane(contentPanel), BorderLayout.CENTER);
-        mainPanel.add(navigationPanel, BorderLayout.SOUTH);
-        add(mainPanel);
+        add(new JScrollPane(contentPanel), BorderLayout.CENTER);
+        add(navigationPanel, BorderLayout.SOUTH);
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == backButton) {
-            new ProductSelectionScreen().setVisible(true);
-            dispose();
+            // B: Replaced new JFrame with navigation to ProductSelectionScreen
+            mainFrame.showScreen("ProductSelection", new ProductSelectionScreen(mainFrame));
         } else if (e.getSource() == confirmButton) {
+            // B: Replaced dispose() with navigation to mainGUI and clear cart
             JOptionPane.showMessageDialog(this, "Đặt hàng thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
-            dispose();
+            mainFrame.clearCart(); // B: Clear cart after confirmation
+            mainFrame.showScreen("MainGUI", new mainGUI(mainFrame.getConnection(), mainFrame.getCardLayout(), mainFrame.getMainPanel(), mainFrame.getUser(), mainFrame));
         }
     }
 
     private JPanel createInfoRow(String text) {
         JPanel rowPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         rowPanel.setBackground(Color.WHITE);
-        rowPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30)); // Giới hạn chiều cao
+        rowPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
 
         JLabel label = new JLabel(text);
         label.setFont(new Font("Times New Roman", Font.PLAIN, 18));
         rowPanel.add(label);
 
         return rowPanel;
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            // Tạo dữ liệu giả lập cho cart để kiểm tra giao diện
-            List<Product_Orders> testCart = new ArrayList<>();
-            Product_Orders po1 = new Product_Orders();
-            po1.setProductID(1);
-            po1.setQuantity(2);
-            po1.setPrice(30000);
-            testCart.add(po1);
-
-            Product_Orders po2 = new Product_Orders();
-            po2.setProductID(2);
-            po2.setQuantity(1);
-            po2.setPrice(20000);
-            testCart.add(po2);
-
-            ConfirmationScreen confirmationScreen = new ConfirmationScreen(testCart);
-            confirmationScreen.setVisible(true);
-        });
     }
 }
