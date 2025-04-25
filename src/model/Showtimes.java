@@ -1,61 +1,76 @@
 package model;
+
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.sql.Date;
 
 public class Showtimes {
-    private int showTimeID;
+    private int showtimeID;
     private Movies movie;
     private Rooms room;
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
+    private Date startTime;
+    private Date dateTime;
     private BigDecimal price;
+
+    
+    
     public Showtimes() {
-    }
-    public Showtimes(int showTimeID, Movies movie, Rooms room, LocalDateTime startTime, LocalDateTime endTime,
-            BigDecimal price) {
-        this.showTimeID = showTimeID;
+		
+	}
+
+	public Showtimes(int showtimeID, Movies movie, Rooms room, Date startTime, Date dateTime, BigDecimal price) {
+        this.showtimeID = showtimeID;
         this.movie = movie;
         this.room = room;
         this.startTime = startTime;
-        this.endTime = endTime;
+        this.dateTime = dateTime;
         this.price = price;
     }
+
     public int getShowTimeID() {
-        return showTimeID;
+        return showtimeID;
     }
-    public void setShowTimeID(int showTimeID) {
-        this.showTimeID = showTimeID;
+
+    public void setShowTimeID(int showtimeID) {
+        this.showtimeID = showtimeID;
     }
+
     public Movies getMovie() {
         return movie;
     }
+
     public void setMovie(Movies movie) {
         this.movie = movie;
     }
+
     public Rooms getRoom() {
         return room;
     }
+
     public void setRoom(Rooms room) {
         this.room = room;
     }
-    public LocalDateTime getStartTime() {
+
+    public Date getStartTime() {
         return startTime;
     }
-    public void setStartTime(LocalDateTime startTime) {
+
+    public void setStartTime(Date startTime) {
         this.startTime = startTime;
     }
-    public LocalDateTime getEndTime() {
-        return endTime;
+
+    public Date getdateTime() {
+        return dateTime;
     }
-    public void setEndTime(LocalDateTime endTime) {
-        this.endTime = endTime;
+
+    public void setdateTime(Date dateTime) {
+        this.dateTime = dateTime;
     }
+
     public BigDecimal getPrice() {
         return price;
     }
+
     public void setPrice(BigDecimal price) {
         this.price = price;
     }
-
-  
 }

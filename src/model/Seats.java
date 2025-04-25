@@ -2,14 +2,14 @@ package model;
 
 public class Seats {
 	private int seatID;
-	private int roomID;
+	private Rooms roomID;
 	private String seatNumber;
 	
 	public Seats() {
 		
 	}
 
-	public Seats(int seatID, int roomID, String seatNumber) {
+	public Seats(int seatID, Rooms roomID, String seatNumber) {
 		this.seatID = seatID;
 		this.roomID = roomID;
 		this.seatNumber = seatNumber;
@@ -23,11 +23,11 @@ public class Seats {
 		this.seatID = seatID;
 	}
 
-	public int getRoomID() {
+	public Rooms getRoomID() {
 		return roomID;
 	}
 
-	public void setRoomID(int roomID) {
+	public void setRoomID(Rooms roomID) {
 		this.roomID = roomID;
 	}
 
@@ -38,6 +38,7 @@ public class Seats {
 	public void setSeatNumber(String seatNumber) {
 		this.seatNumber = seatNumber;
 	}
+
 	
 	
 	

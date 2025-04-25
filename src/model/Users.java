@@ -8,7 +8,6 @@ public class Users {
 	private String userName;
 	private String passwordHash;
 	private String email;
-	private LocalDateTime hireDate;
 	private boolean available;
 	private int roleID;
 	
@@ -17,7 +16,6 @@ public class Users {
 		
 	}
 
-
 	public Users(int userID, String fullName, String userName, String passwordHash, String email,
 			LocalDateTime hireDate, boolean available, int roleID) {
 		this.userID = userID;
@@ -25,7 +23,6 @@ public class Users {
 		this.userName = userName;
 		this.passwordHash = passwordHash;
 		this.email = email;
-		this.hireDate = hireDate;
 		this.available = available;
 		this.roleID = roleID;
 	}
@@ -79,17 +76,6 @@ public class Users {
 	public void setEmail(String email) {
 		this.email = email;
 	}
-
-
-	public LocalDateTime getHireDate() {
-		return hireDate;
-	}
-
-
-	public void setHireDate(LocalDateTime hireDate) {
-		this.hireDate = hireDate;
-	}
-
 
 	public boolean isAvailable() {
 		return available;
