@@ -1,13 +1,13 @@
 package dao;
 
+import dbs.connectDB;
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
-import dbs.connectDB;
 import model.Users;
 
 public class UserDAO {
@@ -21,8 +21,15 @@ public class UserDAO {
         this.con = conn;
     }
 
+    private void ensureConnection() throws SQLException {
+        if (con == null || con.isClosed()) {
+            throw new SQLException("Kết nối cơ sở dữ liệu không khả dụng.");
+        }
+    }
+
     // Thêm người dùng mới
     public void addUser(Users user) throws SQLException {
+        ensureConnection();
         String query = "INSERT INTO Users (username, password, roleID) VALUES (?, ?, ?)";
         try (PreparedStatement stmt = con.prepareStatement(query)) {
             stmt.setString(1, user.getUserName());
@@ -34,6 +41,7 @@ public class UserDAO {
 
     // Lấy tất cả người dùng
     public List<Users> getAllUsers() throws SQLException {
+        ensureConnection();
         List<Users> users = new ArrayList<>();
         String query = "SELECT * FROM Users";
         try (PreparedStatement stmt = con.prepareStatement(query);
@@ -47,6 +55,7 @@ public class UserDAO {
 
     // Lấy người dùng theo ID
     public Users getUserById(int userID) throws SQLException {
+        ensureConnection();
         String query = "SELECT * FROM Users WHERE userID = ?";
         try (PreparedStatement stmt = con.prepareStatement(query)) {
             stmt.setInt(1, userID);
@@ -59,24 +68,27 @@ public class UserDAO {
         return null;
     }
 
-    // Đăng nhập người dùng
-    // Security note: Storing plain-text passwords is insecure. Consider using password hashing (e.g., BCrypt)
+    // Đăng nhập người dùng (gọi stored procedure sp_LoginUser)
     public Users loginUser(String username, String password) throws SQLException {
-        String query = "SELECT * FROM Users WHERE username = ? AND password = ?";
-        try (PreparedStatement stmt = con.prepareStatement(query)) {
+        ensureConnection();
+
+        Users user = null;
+        String query = "{CALL sp_LoginUser(?, ?)}";
+        try (CallableStatement stmt = con.prepareCall(query)) {
             stmt.setString(1, username);
             stmt.setString(2, password);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    return createUserFromResultSet(rs);
+                    user = createUserFromResultSet(rs);
                 }
             }
         }
-        return null;
+        return user;
     }
 
     // Cập nhật người dùng
     public void updateUser(Users user) throws SQLException {
+        ensureConnection();
         String query = "UPDATE Users SET username = ?, password = ?, roleID = ? WHERE userID = ?";
         try (PreparedStatement stmt = con.prepareStatement(query)) {
             stmt.setString(1, user.getUserName());
@@ -89,6 +101,7 @@ public class UserDAO {
 
     // Xóa người dùng
     public void deleteUser(int userID) throws SQLException {
+        ensureConnection();
         String query = "DELETE FROM Users WHERE userID = ?";
         try (PreparedStatement stmt = con.prepareStatement(query)) {
             stmt.setInt(1, userID);
@@ -101,8 +114,15 @@ public class UserDAO {
         Users user = new Users();
         user.setUserID(rs.getInt("userID"));
         user.setUserName(rs.getString("username"));
-        user.setPasswordHash(rs.getString("password"));
+        user.setPasswordHash(rs.getString("password")); // Lưu ý: Đảm bảo cột trong DB là passwordHash
         user.setRoleID(rs.getInt("roleID"));
         return user;
+    }
+
+    // Đóng kết nối
+    public void closeConnection() throws SQLException {
+        if (con != null && !con.isClosed()) {
+            con.close();
+        }
     }
 }

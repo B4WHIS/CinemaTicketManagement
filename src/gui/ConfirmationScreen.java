@@ -18,7 +18,11 @@ public class ConfirmationScreen extends JFrame implements ActionListener {
         initUI();
     }
 
-    private void initUI() {
+    public ConfirmationScreen() {
+		// TODO Auto-generated constructor stub
+	}
+
+	private void initUI() {
         setTitle("Xác Nhận Đặt Hàng");
         setSize(1500, 1000);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
