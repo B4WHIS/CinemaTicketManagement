@@ -27,12 +27,14 @@ public class DetailFilm_GUI extends JPanel {
     private int selectedMovieID;
     private int ticketQuantity = 0;
     private static final int TICKET_PRICE = 50000; // Giá vé giả định (VND)
+    private MainFrame mainFrame;
 
-    public DetailFilm_GUI(Connection connection, int movieID) throws SQLException {
+    public DetailFilm_GUI(Connection connection, int movieID, MainFrame mainFrame) throws SQLException {
         this.selectedMovieID = movieID;
         this.movieManager = new MovieManager(connection);
         this.roomManager = new RoomManager();
         this.showtimeManager = new ShowTimeManager();
+        this.mainFrame = mainFrame;
 
         setLayout(new BorderLayout());
 
@@ -132,7 +134,32 @@ public class DetailFilm_GUI extends JPanel {
                 JOptionPane.showMessageDialog(this, "Vui lòng chọn phòng, ngày và giờ chiếu!", "Lỗi", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            JOptionPane.showMessageDialog(this, "Đặt vé thành công!\nSố lượng: " + ticketQuantity + "\nTổng giá: " + (ticketQuantity * TICKET_PRICE) + " VND", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+            try {
+                String selectedRoom = (String) roomComboBox.getSelectedItem();
+                int roomID = Integer.parseInt(selectedRoom.split(" - ")[0]);
+                Rooms room = roomManager.getRoomByID(roomID);
+                List<Showtimes> showtimes = showtimeManager.getShowtimesByMovie(selectedMovieID);
+                String selectedDateTime = (String) dateComboBox.getSelectedItem();
+                String selectedTime = (String) timeComboBox.getSelectedItem();
+                Showtimes selectedShowtime = showtimes.stream()
+                        .filter(st -> st.getdateTime().toString().equals(selectedDateTime) && 
+                                      st.getStartTime().toString().equals(selectedTime))
+                        .findFirst()
+                        .orElse(null);
+                if (selectedShowtime == null) {
+                    JOptionPane.showMessageDialog(this, "Không tìm thấy lịch chiếu!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                int showtimeID = selectedShowtime.getShowTimeID();
+                mainFrame.setShowtimeID(showtimeID);
+                mainFrame.setTicketID(ticketQuantity);
+                Seat_GUI seatGUI = new Seat_GUI(room, showtimeID, mainFrame);
+                mainFrame.showScreen("SeatGUI", seatGUI);
+                System.out.println("Showing SeatGUI with showtimeID: " + showtimeID); // B: Added for debugging
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Lỗi khi chuyển sang màn hình chọn ghế: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         quantityPanel.add(quantityTextLabel);
@@ -236,7 +263,7 @@ public class DetailFilm_GUI extends JPanel {
         dateComboBox.removeAllItems();
         timeComboBox.removeAllItems();
         if (selectedMovieID == -1) {
-            return; // Không tải lịch chiếu nếu movieID không hợp lệ
+            return;
         }
         List<Showtimes> showtimes = showtimeManager.getShowtimesByMovie(selectedMovieID);
         for (Showtimes st : showtimes) {

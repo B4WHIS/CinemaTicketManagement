@@ -10,8 +10,8 @@ import java.awt.event.ActionListener;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.swing.JButton;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -22,7 +22,7 @@ import dao.SeatStatusDAO;
 import model.Rooms;
 import model.Seats;
 
-public class Seat_GUI extends JFrame implements ActionListener {
+public class Seat_GUI extends JPanel implements ActionListener { // B: Changed from JFrame to JPanel
     private JButton[][] seats;
     private boolean[][] seatStatus;
     private List<Seats> selectedSeats;
@@ -32,10 +32,12 @@ public class Seat_GUI extends JFrame implements ActionListener {
     private int showtimeID;
     private JButton confirmButton;
     private Seats[][] seatObjects;
+    private MainFrame mainFrame; // B: Added to reference MainFrame for navigation
 
-    public Seat_GUI(Rooms room, int showtimeID) {
+    public Seat_GUI(Rooms room, int showtimeID, MainFrame mainFrame) { // B: Added MainFrame parameter
         this.room = room;
         this.showtimeID = showtimeID;
+        this.mainFrame = mainFrame; // B: Store MainFrame reference
         this.seatDAO = new SeatDAO();
         this.seatStatusDAO = new SeatStatusDAO();
         this.selectedSeats = new ArrayList<>();
@@ -43,9 +45,7 @@ public class Seat_GUI extends JFrame implements ActionListener {
         this.seatStatus = new boolean[10][10];
         this.seatObjects = new Seats[10][10];
 
-        setTitle("Chọn Ghế");
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLayout(new BorderLayout());
+        setLayout(new BorderLayout()); // B: Removed setTitle and setDefaultCloseOperation since it's now a JPanel
 
         // Panel màn hình
         JLabel lblScreen = new JLabel("SCREEN", SwingConstants.CENTER);
@@ -147,8 +147,7 @@ public class Seat_GUI extends JFrame implements ActionListener {
         pnlConfirm.add(confirmButton);
         add(pnlConfirm, BorderLayout.SOUTH);
 
-        setSize(800, 600);
-        setLocationRelativeTo(null);
+        // B: Removed setSize and setLocationRelativeTo since it's now a JPanel
     }
 
     @Override
@@ -197,7 +196,7 @@ public class Seat_GUI extends JFrame implements ActionListener {
             for (Seats seat : selectedSeats) {
                 boolean updated = seatStatusDAO.updateSeatStatus(showtimeID, seat.getSeatID(), "Booked");
                 if (!updated) {
-                    JOptionPane.showMessageDialog(this, "Lỗi khi cập nhật trạng thái ghế: " + seat.getSeatNumber());
+                    JOptionPane.showMessageDialog(this, "Ghế " + seat.getSeatNumber() + " đã được đặt hoặc không thể cập nhật!");
                     return;
                 }
                 System.out.println("Đã cập nhật trạng thái ghế: " + seat.getSeatNumber());
@@ -214,24 +213,14 @@ public class Seat_GUI extends JFrame implements ActionListener {
                 "Xác nhận",
                 JOptionPane.YES_NO_OPTION
         );
-
         if (choice == JOptionPane.YES_OPTION) {
-        	ProductSelectionScreen pss = new ProductSelectionScreen();
-            pss.setVisible(true);
+            ProductSelectionScreen pss = new ProductSelectionScreen(mainFrame);
+            mainFrame.showScreen("ProductSelection", pss);
         } else {
-        	ConfirmationScreen cs = new ConfirmationScreen();
-            cs.setVisible(true);
+            ConfirmationScreen cs = new ConfirmationScreen(mainFrame, mainFrame.getCart());
+            mainFrame.showScreen("Confirmation", cs);
         }
-
-        dispose();
     }
 
-    // Main để test độc lập
-    public static void main(String[] args) {
-        Rooms room = new Rooms();
-        room.setRoomID(1);
-        int showtimeID = 1;
-        Seat_GUI seatGUI = new Seat_GUI(room, showtimeID);
-        seatGUI.setVisible(true);
-    }
+    // B: Removed main method since Seat_GUI is no longer a standalone JFrame
 }

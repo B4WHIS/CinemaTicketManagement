@@ -11,17 +11,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ProductSelectionScreen extends JFrame implements ActionListener {
-    private List<Product_Orders> cart; // Giỏ hàng tạm thời
-    private Map<Integer, JLabel> quantityLabels; // Lưu trữ nhãn số lượng
-    private Map<JButton, Products> minusButtonProductMap; // Ánh xạ nút "-" với sản phẩm
-    private Map<JButton, Products> plusButtonProductMap; // Ánh xạ nút "+" với sản phẩm
-    private Map<JButton, JLabel> buttonQuantityLabelMap; // Ánh xạ nút với nhãn số lượng
-    private JLabel totalLabel; // Nhãn tổng tiền
-    private JButton backButton; // Nút "Quay lại"
-    private JButton orderButton; // Nút "Đặt hàng"
+public class ProductSelectionScreen extends JPanel implements ActionListener { // B: Changed from JFrame to JPanel
+    private List<Product_Orders> cart;
+    private Map<Integer, JLabel> quantityLabels;
+    private Map<JButton, Products> minusButtonProductMap;
+    private Map<JButton, Products> plusButtonProductMap;
+    private Map<JButton, JLabel> buttonQuantityLabelMap;
+    private JLabel totalLabel;
+    private JButton backButton;
+    private JButton orderButton;
+    private MainFrame mainFrame; // B: Added MainFrame reference
 
-    public ProductSelectionScreen() {
+    public ProductSelectionScreen(MainFrame mainFrame) { // B: Added MainFrame parameter
+        this.mainFrame = mainFrame; // B: Store MainFrame
         cart = new ArrayList<>();
         quantityLabels = new HashMap<>();
         minusButtonProductMap = new HashMap<>();
@@ -31,19 +33,14 @@ public class ProductSelectionScreen extends JFrame implements ActionListener {
     }
 
     private void initUI() {
-        setTitle("Food Menu");
-        setSize(1500, 1000);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
-
-        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
-        mainPanel.setBackground(Color.WHITE);
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        setLayout(new BorderLayout(10, 10)); // B: Replaced JFrame setup with JPanel layout
+        setBackground(Color.WHITE);
+        setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         // Tiêu đề
         JLabel titleLabel = new JLabel("Food Menu", JLabel.CENTER);
         titleLabel.setFont(new Font("Times New Roman", Font.BOLD, 24));
-        mainPanel.add(titleLabel, BorderLayout.NORTH);
+        add(titleLabel, BorderLayout.NORTH);
 
         // Panel sản phẩm
         JPanel productPanel = new JPanel();
@@ -59,7 +56,7 @@ public class ProductSelectionScreen extends JFrame implements ActionListener {
         products.add(new Products(5, "Combo1 (Bắp + Nước)", 60000, "", null));
         products.add(new Products(6, "Combo2", 80000, "", null));
 
-        // Số lượng ban đầu từ hình
+        // Số lượng ban đầu
         int[] initialQuantities = {0, 0, 2, 2, 0, 0};
 
         for (int i = 0; i < products.size(); i++) {
@@ -160,9 +157,8 @@ public class ProductSelectionScreen extends JFrame implements ActionListener {
         southPanel.add(summaryPanel);
         southPanel.add(navigationPanel);
 
-        mainPanel.add(new JScrollPane(productPanel), BorderLayout.CENTER);
-        mainPanel.add(southPanel, BorderLayout.SOUTH);
-        add(mainPanel);
+        add(new JScrollPane(productPanel), BorderLayout.CENTER);
+        add(southPanel, BorderLayout.SOUTH);
     }
 
     @Override
@@ -192,20 +188,22 @@ public class ProductSelectionScreen extends JFrame implements ActionListener {
         }
         // Xử lý nút "Quay lại"
         else if (e.getSource() == backButton) {
-            dispose();//giả sử là có gì đó nha Bình lon
+            // B: Replaced dispose() with navigation to SeatGUI
+            // Note: Seat_GUI needs Rooms, showtimeID, MainFrame parameters
+            // You need to provide these from MainFrame
+            // mainFrame.showScreen("SeatGUI", new Seat_GUI(/* Rooms, showtimeID, mainFrame */));
+            JOptionPane.showMessageDialog(this, "Cần cung cấp tham số cho Seat_GUI!", "Thông báo", JOptionPane.WARNING_MESSAGE);
         }
         // Xử lý nút "Đặt hàng"
         else if (e.getSource() == orderButton) {
-            new ConfirmationScreen(cart).setVisible(true);
-            dispose();
+            // B: Replaced new JFrame with navigation to ConfirmationScreen
+            mainFrame.addToCart(cart); // B: Save cart to MainFrame
+            mainFrame.showScreen("Confirmation", new ConfirmationScreen(mainFrame, cart));
         }
     }
 
     private void updateCart(int productID, int quantity, Products product) {
-        // Xóa sản phẩm khỏi giỏ nếu đã có
-        cart.removeIf(po -> po.getProductID() == productID);//-> là điều kiện giống kiểu if nhưng mà cho sự kiện á
-
-        // Thêm lại nếu số lượng > 0
+        cart.removeIf(po -> po.getProductID() == productID);
         if (quantity > 0) {
             Product_Orders po = new Product_Orders();
             po.setProductID(productID);
@@ -213,17 +211,11 @@ public class ProductSelectionScreen extends JFrame implements ActionListener {
             po.setPrice(product.getPrice());
             cart.add(po);
         }
-
-        // Cập nhật tổng tiền
         updateTotal();
     }
 
     private void updateTotal() {
         double total = cart.stream().mapToDouble(po -> po.getPrice() * po.getQuantity()).sum();
         totalLabel.setText(String.format("Tổng tiền: %,d", (int) total));
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new ProductSelectionScreen().setVisible(true));//này tao sài chat thì chạy này nó gọn hơn và có thể đổi lại cách bth nha
     }
 }

@@ -11,6 +11,7 @@ import java.awt.Image;
 import java.io.File;
 import java.sql.Connection;
 import java.util.List;
+
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -22,6 +23,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+
 import model.Movies;
 import model.Users;
 import service.MovieManager;
@@ -35,12 +37,14 @@ public class mainGUI extends JPanel {
     private Connection connection;
     private Users user;
     private AddMoviePanel addMoviePanel; // Lưu instance của AddMoviePanel
+    private MainFrame mainFrame; // B: Added to reference MainFrame
 
-    public mainGUI(Connection connection, CardLayout cardLayout, JPanel mainPanel, Users user) {
+    public mainGUI(Connection connection, CardLayout cardLayout, JPanel mainPanel, Users user, MainFrame mainFrame) { // B: Added MainFrame parameter
         this.connection = connection;
         this.cardLayout = cardLayout;
         this.mainPanel = mainPanel;
         this.user = user;
+        this.mainFrame = mainFrame; // B: Store MainFrame reference
         this.movieManager = new MovieManager(connection);
 
         setLayout(new BorderLayout());
@@ -115,7 +119,7 @@ public class mainGUI extends JPanel {
 
         // Thêm DetailFilm_GUI vào mainPanel
         try {
-            mainPanel.add(new DetailFilm_GUI(connection, -1), "MovieDetail");
+            mainPanel.add(new DetailFilm_GUI(connection, -1, mainFrame), "MovieDetail"); // B: Added mainFrame parameter
         } catch (Exception e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, "Không thể khởi tạo trang chi tiết phim: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
@@ -181,7 +185,7 @@ public class mainGUI extends JPanel {
                 btnBuy.setForeground(Color.WHITE);
                 btnBuy.addActionListener(e -> {
                     try {
-                        DetailFilm_GUI detailPanel = new DetailFilm_GUI(connection, movie.getMovieID());
+                        DetailFilm_GUI detailPanel = new DetailFilm_GUI(connection, movie.getMovieID(), mainFrame); // B: Added mainFrame parameter
                         mainPanel.add(detailPanel, "MovieDetail");
                         cardLayout.show(mainPanel, "MovieDetail");
                     } catch (Exception ex) {
