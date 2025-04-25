@@ -1,1 +1,0 @@
-kết nối database, công cụ hỗ trợ
