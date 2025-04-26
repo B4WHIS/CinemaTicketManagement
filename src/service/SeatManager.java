@@ -18,13 +18,13 @@ public class SeatManager {
     }
 
     // Lấy tất cả ghế (Read - danh sách)
-    public List<Seats> getAllSeats() throws SQLException {
-        return seatDAO.getAllSeats();
-    }
+//    public List<Seats> getAllSeats() throws SQLException {
+//        return seatDAO.getAllSeats();
+//    }
 
     // Lấy ghế theo ID (Read - chi tiết)
     public Seats getSeat(int seatID) throws SQLException {
-        Seats seat = seatDAO.getSeatById(seatID);
+        Seats seat = seatDAO.getSeatByID(seatID);
         if (seat == null) {
             throw new SQLException("Không tìm thấy ghế với ID: " + seatID);
         }

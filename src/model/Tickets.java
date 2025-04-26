@@ -35,7 +35,7 @@ public class Tickets {
 	public void setTicketID(int ticketID) {
 		this.ticketID = ticketID;
 	}
-
+	
 	public Showtimes getShowTimeID() {
 		return showTimeID;
 	}
@@ -67,7 +67,14 @@ public class Tickets {
 	public void setPrice(double price) {
 		this.price = price;
 	}
-	
-	
+
+	public Seats getSeatID() {
+	    return seatID;
+	}
+
+	public void setSeatID(Seats seatID) {
+	    this.seatID = seatID;
+	}
+
 	
 }
