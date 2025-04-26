@@ -5,20 +5,18 @@ public class Product_Orders {
     private Orders orderID;
     private int productID;
     private int quantity;
-    private double price;
+    private double totalPrice;
 
     public Product_Orders() {
-        
     }
 
-    public Product_Orders(int productOrderID, Orders orderID, int productID, int quantity, double price) {
+    public Product_Orders(int productOrderID, Orders orderID, int productID, int quantity, double totalPrice) {
         this.productOrderID = productOrderID;
         this.orderID = orderID;
         this.productID = productID;
         this.quantity = quantity;
-        this.price = price;
+        this.totalPrice = totalPrice;
     }
-    
 
     public Orders getOrderID() {
         return orderID;
@@ -44,12 +42,12 @@ public class Product_Orders {
         this.quantity = quantity;
     }
 
-    public double getPrice() {
-        return price;
+    public double getTotalPrice() {
+        return totalPrice;
     }
 
-    public void setPrice(double price) {
-        this.price = price;
+    public void setTotalPrice(double totalPrice) {
+        this.totalPrice = totalPrice;
     }
 
     public int getProductOrderID() {

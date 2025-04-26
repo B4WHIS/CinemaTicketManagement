@@ -21,8 +21,12 @@ import javax.swing.SwingConstants;
 
 import dao.SeatDAO;
 import dao.SeatStatusDAO;
+import dao.Showtimes_DAO;
+import model.Product_Orders;
 import model.Rooms;
 import model.Seats;
+import model.Showtimes;
+import model.Users;
 
 public class Seat_GUI extends JPanel implements ActionListener {
     private JButton[][] seats;
@@ -232,7 +236,39 @@ public class Seat_GUI extends JPanel implements ActionListener {
             ProductSelectionScreen pss = new ProductSelectionScreen(mainFrame, showtimeID, ticketQuantity, ticketPrice, selectedSeats, room);
             mainFrame.showScreen("ProductSelection", pss);
         } else {
-            ConfirmationScreen cs = new ConfirmationScreen(mainFrame, showtimeID, ticketQuantity, ticketPrice, selectedSeats, new ArrayList<>());
+            // Lấy thông tin user từ MainFrame (giả sử MainFrame có phương thức getCurrentUser)
+            Users user = mainFrame.getUser();
+            if (user == null) {
+                JOptionPane.showMessageDialog(this, "Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Lấy thông tin Showtimes từ showtimeID
+            Showtimes_DAO showtimeDAO = new Showtimes_DAO(mainFrame.getConnection());
+            Showtimes showtime;
+            try {
+                showtime = showtimeDAO.getShowtimeByID(showtimeID);
+                if (showtime == null) {
+                    throw new IllegalStateException("Không tìm thấy suất chiếu với ID: " + showtimeID);
+                }
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(this, "Lỗi khi lấy thông tin suất chiếu: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Tạo danh sách cart (List<Product_Orders>) rỗng nếu không chọn đồ ăn
+            List<Product_Orders> cart = new ArrayList<Product_Orders>();
+
+            // Tạo ConfirmationScreen với đúng tham số
+            ConfirmationScreen cs = new ConfirmationScreen(
+                mainFrame, 
+                user, 
+                showtime, 
+                cart, 
+                selectedSeats, 
+                ticketQuantity, 
+                ticketPrice
+            );
             mainFrame.showScreen("Confirmation", cs);
         }
     }

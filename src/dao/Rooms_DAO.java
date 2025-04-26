@@ -37,7 +37,7 @@ public class Rooms_DAO {
             stmt.setInt(1, room.getRoomID());
             stmt.setString(2, room.getRoomName());
             stmt.setInt(3, room.getCapacity());
-            stmt.setString(4, room.getType());
+//            stmt.setString(4, room.getType());
             stmt.executeUpdate();
             return true;
         } catch (SQLException e) {
@@ -64,7 +64,7 @@ public class Rooms_DAO {
         try (PreparedStatement stmt = con.prepareStatement(sql)) {
             stmt.setString(1, room.getRoomName());
             stmt.setInt(2, room.getCapacity());
-            stmt.setString(3, room.getType());
+//            stmt.setString(3, room.getType());
             stmt.setInt(4, room.getRoomID());
             stmt.executeUpdate();
             return true;
@@ -109,9 +109,9 @@ public class Rooms_DAO {
                 int roomID = rs.getInt("RoomID");
                 String roomName = rs.getString("RoomName");
                 int capacity = rs.getInt("Capacity");
-                String type = rs.getString("Type");
+//                String type = rs.getString("Type");
 
-                return new Rooms(roomID, roomName, capacity, type);
+                return new Rooms(roomID, roomName, capacity);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -131,9 +131,9 @@ public class Rooms_DAO {
                 int roomID = rs.getInt("RoomID");
                 String roomName = rs.getString("RoomName");
                 int capacity = rs.getInt("Capacity");
-                String type = rs.getString("Type");
+//                String type = rs.getString("Type");
 
-                Rooms room = new Rooms(roomID,  roomName, capacity, type);
+                Rooms room = new Rooms(roomID,  roomName, capacity);
                 rooms.add(room);
             }
 

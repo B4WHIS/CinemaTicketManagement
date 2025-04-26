@@ -1,233 +1,177 @@
 package gui;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.*;
 import java.math.BigDecimal;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.text.DecimalFormat;
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
 
-import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
+import javax.swing.*;
 
 import dao.OrderDAO;
-import dao.ProductDAO;
 import dao.ProductOrderDAO;
 import dao.TicketDAO;
 import model.Orders;
-import model.PaymentMethod;
 import model.Product_Orders;
-import model.Products;
 import model.Seats;
 import model.Showtimes;
 import model.Tickets;
+import model.Users;
 
-public class ConfirmationScreen extends JPanel implements ActionListener {
-    private List<Product_Orders> cart;
-    private JButton backButton;
-    private JButton confirmButton;
+public class ConfirmationScreen extends JPanel {
     private MainFrame mainFrame;
-    private int showtimeID;
+    private Users user;
+    private Showtimes showtime;
+    private List<Product_Orders> cart;
+    private List<Seats> selectedSeats;
     private int ticketQuantity;
     private BigDecimal ticketPrice;
-    private List<Seats> selectedSeats;
-    private DecimalFormat priceFormatter;
 
-    public ConfirmationScreen(MainFrame mainFrame, int showtimeID, int ticketQuantity, BigDecimal ticketPrice, List<Seats> selectedSeats, List<Product_Orders> cart) {
+    private JLabel lblMovieTitle;
+    private JLabel lblShowtime;
+    private JLabel lblSeats;
+    private JLabel lblTotalAmount;
+    private JButton btnConfirm;
+    private JButton btnCancel;
+
+    public ConfirmationScreen(MainFrame mainFrame, Users user, Showtimes showtime, List<Product_Orders> cart,
+                              List<Seats> selectedSeats, int ticketQuantity, BigDecimal ticketPrice) {
         this.mainFrame = mainFrame;
-        this.showtimeID = showtimeID;
+        this.user = user;
+        this.showtime = showtime;
+        this.cart = cart;
+        this.selectedSeats = selectedSeats;
         this.ticketQuantity = ticketQuantity;
         this.ticketPrice = ticketPrice;
-        this.selectedSeats = selectedSeats;
-        this.cart = cart;
-        this.priceFormatter = new DecimalFormat("#,###");
-        initUI();
-    }
 
-    private void initUI() {
-        setLayout(new BorderLayout(10, 10));
-        setBackground(Color.WHITE);
-        setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        // Đặt kích thước cố định cho JPanel
+        setPreferredSize(new Dimension(400, 300));
+        setLayout(new BorderLayout());
+        setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // Tiêu đề
-        JLabel titleLabel = new JLabel("Xác Nhận Đặt Hàng", JLabel.CENTER);
-        titleLabel.setFont(new Font("Times New Roman", Font.BOLD, 24));
+        // Thêm tiêu đề
+        JLabel titleLabel = new JLabel("Xác nhận đặt vé", SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Times New Roman", Font.BOLD, 18));
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(5, 0, 10, 0));
         add(titleLabel, BorderLayout.NORTH);
 
-        // Panel nội dung
-        JPanel contentPanel = new JPanel();
-        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
-        contentPanel.setBackground(Color.WHITE);
+        // Panel chính chứa thông tin
+        JPanel infoPanel = new JPanel();
+        infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
 
-        // Thông tin vé
-        try {
-            String sql = "SELECT m.title, r.roomName, s.startTime FROM Showtimes s " +
-                         "JOIN Movies m ON s.movieID = m.movieID " +
-                         "JOIN Rooms r ON s.roomID = r.roomID WHERE s.showtimeID = ?";
-            Connection conn = mainFrame.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setInt(1, showtimeID);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                JPanel ticketHeaderPanel = createInfoRow("Thông Tin Vé:");
-                ticketHeaderPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
-                JLabel ticketHeader = (JLabel) ticketHeaderPanel.getComponent(0);
-                ticketHeader.setFont(new Font("Times New Roman", Font.BOLD, 18));
-                contentPanel.add(ticketHeaderPanel);
+        lblMovieTitle = new JLabel("Phim: " + showtime.getMovie().getTitle());
+        lblShowtime = new JLabel("Suất chiếu: " + showtime.getStartTime().toString());
+        lblSeats = new JLabel("Ghế: " + getSelectedSeatsString());
+        lblTotalAmount = new JLabel("Tổng tiền: " + getFormattedTotalAmount());
 
-                contentPanel.add(createInfoRow("Tên phim: " + rs.getString("title")));
-                contentPanel.add(createInfoRow("Phòng chiếu: " + rs.getString("roomName")));
-                contentPanel.add(createInfoRow("Suất chiếu: " + rs.getString("startTime")));
-                StringBuilder seats = new StringBuilder();
-                for (Seats seat : selectedSeats) {
-                    seats.append(seat.getSeatNumber()).append(", ");
-                }
-                contentPanel.add(createInfoRow("Ghế: " + (seats.length() > 0 ? seats.substring(0, seats.length() - 2) : "N/A")));
-                contentPanel.add(createInfoRow("Số lượng vé: " + ticketQuantity));
-                contentPanel.add(createInfoRow("Giá vé: " + priceFormatter.format(ticketPrice.multiply(BigDecimal.valueOf(ticketQuantity))) + " VND"));
-            }
-            rs.close();
-            stmt.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            contentPanel.add(createInfoRow("Lỗi: Không thể lấy thông tin vé"));
+        btnConfirm = new JButton("Xác nhận");
+        btnConfirm.setBackground(Color.GREEN);
+        btnConfirm.setForeground(Color.WHITE);
+        btnConfirm.addActionListener(e -> confirmBooking());
+
+        btnCancel = new JButton("Hủy");
+        btnCancel.setBackground(Color.RED);
+        btnCancel.setForeground(Color.WHITE);
+        btnCancel.addActionListener(e -> mainFrame.showScreen("SeatScreen", null)); // Quay lại màn hình chọn ghế
+
+        infoPanel.add(lblMovieTitle);
+        infoPanel.add(Box.createVerticalStrut(10));
+        infoPanel.add(lblShowtime);
+        infoPanel.add(Box.createVerticalStrut(10));
+        infoPanel.add(lblSeats);
+        infoPanel.add(Box.createVerticalStrut(10));
+        infoPanel.add(lblTotalAmount);
+        infoPanel.add(Box.createVerticalStrut(20));
+        infoPanel.add(btnConfirm);
+        infoPanel.add(Box.createVerticalStrut(10));
+        infoPanel.add(btnCancel);
+
+        add(infoPanel, BorderLayout.CENTER);
+    }
+
+    private String getSelectedSeatsString() {
+        if (selectedSeats == null || selectedSeats.isEmpty()) {
+            return "Không có ghế nào được chọn";
         }
-
-        // Đồ ăn
-        JPanel foodHeaderPanel = createInfoRow("Đồ Ăn:");
-        foodHeaderPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 5, 0));
-        JLabel foodHeader = (JLabel) foodHeaderPanel.getComponent(0);
-        foodHeader.setFont(new Font("Times New Roman", Font.BOLD, 18));
-        contentPanel.add(foodHeaderPanel);
-
-        double cartTotal = 0.0;
-        if (cart.isEmpty()) {
-            contentPanel.add(createInfoRow("Không có món nào"));
-        } else {
-            for (Product_Orders po : cart) {
-                String productName = getProductName(po.getProductID());
-                String productInfo = String.format("%s x%d (%,.0f VND)", productName, po.getQuantity(), po.getPrice() * po.getQuantity());
-                contentPanel.add(createInfoRow(productInfo));
-                cartTotal += po.getPrice() * po.getQuantity();
-            }
+        StringBuilder sb = new StringBuilder();
+        for (Seats seat : selectedSeats) {
+            sb.append(seat.getSeatNumber()).append(", ");
         }
+        return sb.length() > 0 ? sb.substring(0, sb.length() - 2) : "";
+    }
 
-        // Tổng tiền
+    private double calculateTotalAmount() {
         double ticketTotal = ticketPrice.doubleValue() * ticketQuantity;
-        double total = ticketTotal + cartTotal;
-        JPanel totalPanel = createInfoRow(String.format("Tổng tiền: %,d VND", (int) total));
-        totalPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
-        contentPanel.add(totalPanel);
-
-        // Panel điều hướng
-        JPanel navigationPanel = new JPanel(new BorderLayout());
-        navigationPanel.setBackground(Color.WHITE);
-        navigationPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
-
-        backButton = new JButton("← Quay lại");
-        backButton.setFont(new Font("Times New Roman", Font.PLAIN, 16));
-        backButton.setBackground(Color.WHITE);
-        backButton.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        backButton.addActionListener(this);
-        navigationPanel.add(backButton, BorderLayout.WEST);
-
-        confirmButton = new JButton("Xác nhận →");
-        confirmButton.setFont(new Font("Times New Roman", Font.PLAIN, 16));
-        confirmButton.setBackground(Color.WHITE);
-        confirmButton.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        confirmButton.addActionListener(this);
-        navigationPanel.add(confirmButton, BorderLayout.EAST);
-
-        add(new JScrollPane(contentPanel), BorderLayout.CENTER);
-        add(navigationPanel, BorderLayout.SOUTH);
+        double productTotal = cart.stream().mapToDouble(Product_Orders::getTotalPrice).sum();
+        return ticketTotal + productTotal;
     }
 
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == backButton) {
-            ProductSelectionScreen pss = new ProductSelectionScreen(mainFrame, showtimeID, ticketQuantity, ticketPrice, selectedSeats, selectedSeats.get(0).getRoom());
-            mainFrame.showScreen("ProductSelection", pss);
-        } else if (e.getSource() == confirmButton) {
-            try {
-                // Lưu đơn hàng vào Orders
-                OrderDAO orderDAO = new OrderDAO(mainFrame.getConnection());
-                Orders order = new Orders();
-                order.setUserID(mainFrame.getUser());
-                double total = ticketPrice.doubleValue() * ticketQuantity + 
-                              cart.stream().mapToDouble(po -> po.getPrice() * po.getQuantity()).sum();
-                order.setTotalPrice(total);
-                order.setOrderDate(new Date());
-                PaymentMethod pm = new PaymentMethod();
-                pm.setPaymentMethodID(1);
-                order.setPaymentMethod(pm);
-                orderDAO.saveOrder(order);
-
-                // Lưu vé vào Tickets
-                TicketDAO ticketDAO = new TicketDAO(mainFrame.getConnection());
-                for (int i = 0; i < ticketQuantity; i++) {
-                    Tickets ticket = new Tickets();
-                    Showtimes showtime = new Showtimes();
-                    showtime.setShowTimeID(showtimeID);
-                    ticket.setShowTimeID(showtime);
-                    ticket.setSaleDate(LocalDateTime.now());
-                    ticket.setOrderID(order);
-                    ticket.setPrice(ticketPrice.doubleValue());
-                    ticketDAO.saveTicket(ticket);
-                }
-
-                // Lưu đồ ăn vào Product_Orders
-                if (!cart.isEmpty()) {
-                    ProductOrderDAO productOrderDAO = new ProductOrderDAO(mainFrame.getConnection());
-                    for (Product_Orders po : cart) {
-                        po.setOrderID(order);
-                        productOrderDAO.saveProductOrder(po);
-                    }
-                }
-
-                JOptionPane.showMessageDialog(this, "Đặt hàng thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
-                mainFrame.showScreen("MainGUI", new mainGUI(mainFrame.getConnection(), mainFrame.getCardLayout(), mainFrame.getMainPanel(), mainFrame.getUser(), mainFrame));
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-                JOptionPane.showMessageDialog(this, "Lỗi khi lưu đơn hàng: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
-            }
-        }
+    private String getFormattedTotalAmount() {
+        return String.format("%,.2f", calculateTotalAmount());
     }
 
-    private JPanel createInfoRow(String text) {
-        JPanel rowPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        rowPanel.setBackground(Color.WHITE);
-        rowPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+    private void confirmBooking() {
+        Orders order = new Orders();
+        order.setUserID(user);
+        order.setTotalAmount(calculateTotalAmount()); // Sử dụng giá trị double trực tiếp
+        order.setOrderDate(new java.util.Date());
+        order.setPaymentMethod(new model.PaymentMethod(1, "Cash")); // Giả sử mặc định
 
-        JLabel label = new JLabel(text);
-        label.setFont(new Font("Times New Roman", Font.PLAIN, 18));
-        rowPanel.add(label);
-
-        return rowPanel;
-    }
-
-    private String getProductName(int productID) {
+        Connection conn = mainFrame.getConnection();
         try {
-            ProductDAO productDAO = new ProductDAO(mainFrame.getConnection());
-            Products product = productDAO.getProductById(productID);
-            return product != null ? product.getProductName() : "Sản phẩm " + productID;
+            conn.setAutoCommit(false);
+
+            // Lưu đơn hàng
+            OrderDAO orderDAO = new OrderDAO(conn);
+            orderDAO.saveOrder(order);
+            if (order.getOrderID() <= 0) {
+                throw new SQLException("orderID không hợp lệ sau khi lưu đơn hàng: " + order.getOrderID());
+            }
+            System.out.println("Order saved with orderID: " + order.getOrderID());
+
+            // Lưu sản phẩm trong đơn hàng
+            ProductOrderDAO productOrderDAO = new ProductOrderDAO(conn);
+            for (Product_Orders po : cart) {
+                po.setOrderID(order);
+                productOrderDAO.saveProductOrder(po);
+            }
+
+            // Lưu vé
+            TicketDAO ticketDAO = new TicketDAO(conn);
+            if (selectedSeats == null || selectedSeats.size() < ticketQuantity) {
+                throw new IllegalStateException("Không đủ ghế đã chọn cho số lượng vé.");
+            }
+            for (int i = 0; i < ticketQuantity; i++) {
+                Tickets ticket = new Tickets();
+                Showtimes showtimeObj = new Showtimes();
+                showtimeObj.setShowTimeID(showtime.getShowTimeID());
+                ticket.setShowTimeID(showtimeObj);
+                ticket.setSaleDate(LocalDateTime.now());
+                ticket.setOrderID(order);
+                ticket.setPrice(ticketPrice.doubleValue());
+                ticket.setSeatID(selectedSeats.get(i));
+                System.out.println("Saving ticket with orderID: " + order.getOrderID());
+                ticketDAO.saveTicket(ticket);
+            }
+
+            conn.commit();
+            JOptionPane.showMessageDialog(this, "Đặt vé thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+            mainFrame.showScreen("MainScreen", null); // Quay về màn hình chính sau khi đặt vé thành công
         } catch (SQLException e) {
+            try {
+                conn.rollback();
+            } catch (SQLException rollbackEx) {
+                rollbackEx.printStackTrace();
+            }
+            JOptionPane.showMessageDialog(this, "Lỗi khi lưu đơn hàng: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
-            return "Sản phẩm " + productID;
+        } finally {
+            try {
+                conn.setAutoCommit(true);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

@@ -25,10 +25,13 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
 import dao.ProductDAO;
+import dao.Showtimes_DAO;
 import model.Product_Orders;
 import model.Products;
 import model.Rooms;
 import model.Seats;
+import model.Showtimes;
+import model.Users;
 
 public class ProductSelectionScreen extends JPanel implements ActionListener {
     private List<Product_Orders> cart;
@@ -53,7 +56,7 @@ public class ProductSelectionScreen extends JPanel implements ActionListener {
         this.ticketQuantity = ticketQuantity;
         this.ticketPrice = ticketPrice;
         this.selectedSeats = selectedSeats;
-        this.room = room; // Lưu trữ room
+        this.room = room;
         this.cart = new ArrayList<>();
         this.quantityLabels = new HashMap<>();
         this.minusButtonProductMap = new HashMap<>();
@@ -216,7 +219,36 @@ public class ProductSelectionScreen extends JPanel implements ActionListener {
                 JOptionPane.showMessageDialog(this, "Lỗi khi quay lại: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
         } else if (e.getSource() == orderButton) {
-            ConfirmationScreen cs = new ConfirmationScreen(mainFrame, showtimeID, ticketQuantity, ticketPrice, selectedSeats, cart);
+            // Lấy thông tin user từ MainFrame (giả sử MainFrame có phương thức getCurrentUser)
+            Users user = mainFrame.getUser();
+            if (user == null) {
+                JOptionPane.showMessageDialog(this, "Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Lấy thông tin Showtimes từ showtimeID
+            Showtimes_DAO showtimeDAO = new Showtimes_DAO(mainFrame.getConnection());
+            Showtimes showtime;
+            try {
+                showtime = showtimeDAO.getShowtimeByID(showtimeID);
+                if (showtime == null) {
+                    throw new IllegalStateException("Không tìm thấy suất chiếu với ID: " + showtimeID);
+                }
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(this, "Lỗi khi lấy thông tin suất chiếu: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Tạo ConfirmationScreen và hiển thị qua MainFrame
+            ConfirmationScreen cs = new ConfirmationScreen(
+                mainFrame, 
+                user, 
+                showtime, 
+                cart, 
+                selectedSeats, 
+                ticketQuantity, 
+                ticketPrice
+            );
             mainFrame.showScreen("Confirmation", cs);
         }
     }
@@ -227,14 +259,14 @@ public class ProductSelectionScreen extends JPanel implements ActionListener {
             Product_Orders po = new Product_Orders();
             po.setProductID(productID);
             po.setQuantity(quantity);
-            po.setPrice(product.getPrice());
+            po.setTotalPrice(product.getPrice() * quantity); // Tính TotalPrice = Price * Quantity
             cart.add(po);
         }
         updateTotal();
     }
 
     private void updateTotal() {
-        double total = cart.stream().mapToDouble(po -> po.getPrice() * po.getQuantity()).sum();
+        double total = cart.stream().mapToDouble(po -> po.getTotalPrice()).sum();
         total += ticketPrice.doubleValue() * ticketQuantity;
         totalLabel.setText(String.format("Tổng tiền: %,d VND", (int) total));
     }

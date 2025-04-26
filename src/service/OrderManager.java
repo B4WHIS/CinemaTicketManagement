@@ -43,12 +43,12 @@ public class OrderManager {
             if (po.getQuantity() <= 0) {
                 throw new IllegalArgumentException("Quantity must be positive");
             }
-            if (po.getPrice() < 0) {
+            if (po.getTotalPrice() < 0) {
                 throw new IllegalArgumentException("Price cannot be negative");
             }
-            totalPrice += po.getPrice() * po.getQuantity();
+            totalPrice += po.getTotalPrice() * po.getQuantity();
         }
-        order.setTotalPrice(totalPrice);
+        order.setTotalAmount(totalPrice);
 
         // Save
         orderDAO.saveOrder(order);

@@ -24,14 +24,43 @@ public class ProductOrderDAO {
 
     // Lưu chi tiết đơn hàng mới
     public void saveProductOrder(Product_Orders productOrder) throws SQLException {
-        String query = "INSERT INTO Product_Orders (orderID, productID, quantity, price) VALUES (?, ?, ?, ?)";
+        // Bắt đầu giao dịch để tránh xung đột đa luồng
+        boolean autoCommit = connection.getAutoCommit();
+        connection.setAutoCommit(false);
+        try {
+            // Lấy ProductOrderID lớn nhất hiện tại
+            int newProductOrderID = 1;
+            String getMaxIDSql = "SELECT MAX(ProductOrderID) FROM ProductOrders WITH (UPDLOCK, HOLDLOCK)";
+            try (PreparedStatement pstmt = connection.prepareStatement(getMaxIDSql);
+                 ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    newProductOrderID = rs.getInt(1) + 1;
+                }
+            }
 
-        try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setInt(1, productOrder.getOrderID().getOrderID());
-            stmt.setInt(2, productOrder.getProductID());
-            stmt.setInt(3, productOrder.getQuantity());
-            stmt.setDouble(4, productOrder.getPrice());
-            stmt.executeUpdate();
+            // Gán ProductOrderID cho đối tượng
+            productOrder.setProductOrderID(newProductOrderID);
+
+            // Chèn bản ghi với ProductOrderID
+            String sql = "INSERT INTO ProductOrders (ProductOrderID, OrderID, ProductID, Quantity, TotalPrice) VALUES (?, ?, ?, ?, ?)";
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                pstmt.setInt(1, productOrder.getProductOrderID());
+                pstmt.setInt(2, productOrder.getOrderID().getOrderID());
+                pstmt.setInt(3, productOrder.getProductID());
+                pstmt.setInt(4, productOrder.getQuantity());
+                pstmt.setDouble(5, productOrder.getTotalPrice());
+                pstmt.executeUpdate();
+            }
+
+            // Commit giao dịch
+            connection.commit();
+        } catch (SQLException e) {
+            // Rollback nếu có lỗi
+            connection.rollback();
+            throw new SQLException("Lỗi khi lưu ProductOrder: " + e.getMessage(), e);
+        } finally {
+            // Khôi phục trạng thái autoCommit
+        	connection.setAutoCommit(autoCommit);
         }
     }
 
@@ -54,7 +83,7 @@ public class ProductOrderDAO {
                     po.setOrderID(order);
                     po.setProductID(rs.getInt("productID"));
                     po.setQuantity(rs.getInt("quantity"));
-                    po.setPrice(rs.getDouble("price"));
+                    po.setTotalPrice(rs.getDouble("price"));
                     productOrders.add(po);
                 }
             }
