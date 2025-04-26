@@ -13,6 +13,7 @@ import java.awt.Image;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
+
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -24,6 +25,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+
 import model.Movies;
 import model.Users;
 import service.MovieManager;
@@ -208,7 +210,7 @@ public class mainGUI extends JPanel {
 
                 if (imagePath != null && !imagePath.isEmpty()) {
                     try {
-                        String resourcePath = "/movies/" + imagePath.substring(imagePath.lastIndexOf("/") + 1);
+                        String resourcePath = "/img/movies/" + imagePath.substring(imagePath.lastIndexOf("/") + 1);
                         System.out.println("Resource path for getResource: " + resourcePath);
 
                         java.net.URL resourceURL = getClass().getResource(resourcePath);
