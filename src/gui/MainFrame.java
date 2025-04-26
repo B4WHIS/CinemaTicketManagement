@@ -3,9 +3,11 @@ package gui;
 import java.awt.CardLayout;
 import java.sql.Connection;
 import java.util.ArrayList;
-import java.util.List; // B: Added import for List
+import java.util.List;
+
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+
 import model.Product_Orders;
 import model.Users;
 
@@ -19,7 +21,6 @@ public class MainFrame extends JFrame {
     private Connection connection;
     private Users user;
 
-    // Constructor và các phương thức khác giữ nguyên
     public MainFrame(Connection connection, Users user) {
         this.connection = connection;
         this.user = user;
@@ -37,22 +38,25 @@ public class MainFrame extends JFrame {
         setSize(1500, 1000);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
-
-        showMainGUI();
     }
 
-    private void showMainGUI() {
-        mainGUI mainGuiPanel = new mainGUI(connection, cardLayout, mainPanel, user, this);
+    public void showMainGUI() {
+        StaffGUI mainGuiPanel = new StaffGUI(connection, cardLayout, mainPanel, user, this);
         mainPanel.add(mainGuiPanel, "MainGUI");
         cardLayout.show(mainPanel, "MainGUI");
     }
 
-    // Sửa phương thức addToCart
-    public void addToCart(List<Product_Orders> newCart) { // B: Changed parameter from Product_Orders to List<Product_Orders>
-        cart.addAll(newCart); // B: Add all items from newCart to cart
+    //B: Thêm phương thức showMainGUI2 để hiển thị giao diện cho admin (roleID = 1)
+    public void showMainGUI2() {
+        AdminGUI mainGui2Panel = new AdminGUI(connection, cardLayout, mainPanel, user, this);
+        mainPanel.add(mainGui2Panel, "MainGUI2");
+        cardLayout.show(mainPanel, "MainGUI2");
     }
 
-    // Các phương thức khác giữ nguyên
+    public void addToCart(List<Product_Orders> newCart) {
+        cart.addAll(newCart);
+    }
+
     public void clearCart() {
         cart.clear();
     }

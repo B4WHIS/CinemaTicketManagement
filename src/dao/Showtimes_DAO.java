@@ -34,6 +34,11 @@ public class Showtimes_DAO {
     }
 
     public boolean addShowtime(Showtimes showtime) throws SQLException {
+        if (showtime == null || showtime.getMovie() == null || showtime.getRoom() == null) {
+            System.err.println("Showtime, Movie hoặc Room không hợp lệ.");
+            return false;
+        }
+
         ensureConnection();
 
         String checkSql = "SELECT COUNT(*) FROM Showtimes WHERE ShowtimeID=?";
@@ -41,6 +46,7 @@ public class Showtimes_DAO {
             checkStmt.setInt(1, showtime.getShowTimeID());
             try (ResultSet rs = checkStmt.executeQuery()) {
                 if (rs.next() && rs.getInt(1) > 0) {
+                    System.out.println("ShowtimeID " + showtime.getShowTimeID() + " đã tồn tại.");
                     return false;
                 }
             }
@@ -56,11 +62,21 @@ public class Showtimes_DAO {
             stmt.setBigDecimal(6, showtime.getPrice());
 
             stmt.executeUpdate();
+            System.out.println("Thêm suất chiếu thành công - ShowtimeID: " + showtime.getShowTimeID());
             return true;
+        } catch (SQLException e) {
+            System.err.println("Lỗi khi thêm suất chiếu - ShowtimeID: " + showtime.getShowTimeID());
+            e.printStackTrace();
+            throw e;
         }
     }
 
     public boolean updateShowtime(Showtimes showtime) throws SQLException {
+        if (showtime == null || showtime.getMovie() == null || showtime.getRoom() == null) {
+            System.err.println("Showtime, Movie hoặc Room không hợp lệ.");
+            return false;
+        }
+
         ensureConnection();
 
         String checkSql = "SELECT COUNT(*) FROM Showtimes WHERE ShowtimeID=?";
@@ -68,6 +84,7 @@ public class Showtimes_DAO {
             checkStmt.setInt(1, showtime.getShowTimeID());
             try (ResultSet rs = checkStmt.executeQuery()) {
                 if (rs.next() && rs.getInt(1) == 0) {
+                    System.out.println("ShowtimeID " + showtime.getShowTimeID() + " không tồn tại.");
                     return false;
                 }
             }
@@ -83,7 +100,12 @@ public class Showtimes_DAO {
             stmt.setInt(6, showtime.getShowTimeID());
 
             stmt.executeUpdate();
+            System.out.println("Cập nhật suất chiếu thành công - ShowtimeID: " + showtime.getShowTimeID());
             return true;
+        } catch (SQLException e) {
+            System.err.println("Lỗi khi cập nhật suất chiếu - ShowtimeID: " + showtime.getShowTimeID());
+            e.printStackTrace();
+            throw e;
         }
     }
 
@@ -95,6 +117,7 @@ public class Showtimes_DAO {
             checkStmt.setInt(1, showtimeID);
             try (ResultSet rs = checkStmt.executeQuery()) {
                 if (rs.next() && rs.getInt(1) == 0) {
+                    System.out.println("ShowtimeID " + showtimeID + " không tồn tại.");
                     return false;
                 }
             }
@@ -104,7 +127,12 @@ public class Showtimes_DAO {
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, showtimeID);
             stmt.executeUpdate();
+            System.out.println("Xóa suất chiếu thành công - ShowtimeID: " + showtimeID);
             return true;
+        } catch (SQLException e) {
+            System.err.println("Lỗi khi xóa suất chiếu - ShowtimeID: " + showtimeID);
+            e.printStackTrace();
+            throw e;
         }
     }
 
@@ -114,7 +142,7 @@ public class Showtimes_DAO {
         String sql = "SELECT s.ShowtimeID, s.RoomID, s.DateTime, s.StartTime, s.Price, " +
                     "m.MovieID, m.Title AS movieTitle, m.Genre AS movieGenre, m.Duration AS movieDuration, " +
                     "m.Director AS movieDirector, m.ReleaseDate AS movieReleaseDate, m.Image AS movieImage, " +
-                    "r.RoomID AS roomID, r.RoomName AS roomName, r.Capacity AS roomCapacity " +
+                    "r.RoomID AS roomID, r.RoomName AS roomName, r.Capacity AS roomCapacity, r.Type AS roomType " +
                     "FROM Showtimes s " +
                     "JOIN Movies m ON s.MovieID = m.MovieID " +
                     "JOIN Rooms r ON s.RoomID = r.RoomID " +
@@ -135,10 +163,12 @@ public class Showtimes_DAO {
                     int roomID = rs.getInt("roomID");
                     String roomName = rs.getString("roomName");
                     int roomCapacity = rs.getInt("roomCapacity");
+                    String roomType = rs.getString("roomType");
                     Rooms room = new Rooms(
                             roomID,
                             roomName != null ? roomName : "Phòng không xác định",
-                            roomCapacity
+                            roomCapacity,
+                            roomType != null ? roomType : "Không xác định"
                     );
                     Showtimes showtime = new Showtimes(
                             rs.getInt("ShowtimeID"),
@@ -148,13 +178,14 @@ public class Showtimes_DAO {
                             rs.getDate("DateTime"),
                             rs.getBigDecimal("Price")
                     );
-                    System.out.println("Created Showtime - ShowtimeID: " + showtime.getShowTimeID() +
-                            ", RoomID: " + showtime.getRoom().getRoomID() +
-                            ", RoomName: " + showtime.getRoom().getRoomName());
+                    System.out.println("Lấy suất chiếu thành công - ShowtimeID: " + showtime.getShowTimeID() +
+                            ", RoomID: " + room.getRoomID() +
+                            ", RoomName: " + room.getRoomName());
                     return showtime;
                 }
             }
         }
+        System.out.println("Không tìm thấy suất chiếu với ShowtimeID: " + showtimeID);
         return null;
     }
 
@@ -165,7 +196,7 @@ public class Showtimes_DAO {
         String sql = "SELECT s.ShowtimeID, s.RoomID, s.DateTime, s.StartTime, s.Price, " +
                     "m.MovieID, m.Title AS movieTitle, m.Genre AS movieGenre, m.Duration AS movieDuration, " +
                     "m.Director AS movieDirector, m.ReleaseDate AS movieReleaseDate, m.Image AS movieImage, " +
-                    "r.RoomID AS roomID, r.RoomName AS roomName, r.Capacity AS roomCapacity " +
+                    "r.RoomID AS roomID, r.RoomName AS roomName, r.Capacity AS roomCapacity, r.Type AS roomType " +
                     "FROM Showtimes s " +
                     "JOIN Movies m ON s.MovieID = m.MovieID " +
                     "JOIN Rooms r ON s.RoomID = r.RoomID " +
@@ -174,11 +205,11 @@ public class Showtimes_DAO {
             stmt.setInt(1, movieID);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    System.out.println("Raw data - ShowtimeID: " + rs.getInt("ShowtimeID") +
-                            ", RoomID (from Showtimes): " + rs.getInt("RoomID") +
-                            ", RoomID (from Rooms): " + rs.getInt("roomID") +
+                    System.out.println("Dữ liệu thô - ShowtimeID: " + rs.getInt("ShowtimeID") +
+                            ", RoomID: " + rs.getInt("roomID") +
                             ", RoomName: " + rs.getString("roomName") +
-                            ", RoomCapacity: " + rs.getInt("roomCapacity"));
+                            ", RoomCapacity: " + rs.getInt("roomCapacity") +
+                            ", RoomType: " + rs.getString("roomType"));
 
                     Movies movie = new Movies(
                             rs.getInt("MovieID"),
@@ -193,11 +224,13 @@ public class Showtimes_DAO {
                     int roomID = rs.getInt("roomID");
                     String roomName = rs.getString("roomName");
                     int roomCapacity = rs.getInt("roomCapacity");
+                    String roomType = rs.getString("roomType");
 
                     Rooms room = new Rooms(
                             roomID,
                             roomName != null ? roomName : "Phòng không xác định",
-                            roomCapacity
+                            roomCapacity,
+                            roomType != null ? roomType : "Không xác định"
                     );
 
                     BigDecimal price = rs.getBigDecimal("Price");
@@ -218,14 +251,15 @@ public class Showtimes_DAO {
                             price
                     );
 
-                    System.out.println("Created Showtime - ShowtimeID: " + showtime.getShowTimeID() +
-                            ", RoomID: " + showtime.getRoom().getRoomID() +
-                            ", RoomName: " + showtime.getRoom().getRoomName());
+                    System.out.println("Tạo suất chiếu - ShowtimeID: " + showtime.getShowTimeID() +
+                            ", RoomID: " + room.getRoomID() +
+                            ", RoomName: " + room.getRoomName());
 
                     showtimes.add(showtime);
                 }
             }
         }
+        System.out.println("Lấy " + showtimes.size() + " suất chiếu cho MovieID: " + movieID);
         return showtimes;
     }
 
@@ -236,7 +270,7 @@ public class Showtimes_DAO {
         String sql = "SELECT s.ShowtimeID, s.RoomID, s.DateTime, s.StartTime, s.Price, " +
                     "m.MovieID, m.Title AS movieTitle, m.Genre AS movieGenre, m.Duration AS movieDuration, " +
                     "m.Director AS movieDirector, m.ReleaseDate AS movieReleaseDate, m.Image AS movieImage, " +
-                    "r.RoomID AS roomID, r.RoomName AS roomName, r.Capacity AS roomCapacity " +
+                    "r.RoomID AS roomID, r.RoomName AS roomName, r.Capacity AS roomCapacity, r.Type AS roomType " +
                     "FROM Showtimes s " +
                     "JOIN Movies m ON s.MovieID = m.MovieID " +
                     "JOIN Rooms r ON s.RoomID = r.RoomID";
@@ -255,10 +289,12 @@ public class Showtimes_DAO {
                 int roomID = rs.getInt("roomID");
                 String roomName = rs.getString("roomName");
                 int roomCapacity = rs.getInt("roomCapacity");
+                String roomType = rs.getString("roomType");
                 Rooms room = new Rooms(
                         roomID,
                         roomName != null ? roomName : "Phòng không xác định",
-                        roomCapacity
+                        roomCapacity,
+                        roomType != null ? roomType : "Không xác định"
                 );
 
                 Showtimes showtime = new Showtimes(
@@ -270,19 +306,21 @@ public class Showtimes_DAO {
                         rs.getBigDecimal("Price")
                 );
 
-                System.out.println("Created Showtime - ShowtimeID: " + showtime.getShowTimeID() +
-                        ", RoomID: " + showtime.getRoom().getRoomID() +
-                        ", RoomName: " + showtime.getRoom().getRoomName());
+                System.out.println("Tạo suất chiếu - ShowtimeID: " + showtime.getShowTimeID() +
+                        ", RoomID: " + room.getRoomID() +
+                        ", RoomName: " + room.getRoomName());
 
                 showtimes.add(showtime);
             }
         }
+        System.out.println("Lấy tất cả " + showtimes.size() + " suất chiếu.");
         return showtimes;
     }
 
     public void closeConnection() throws SQLException {
         if (connection != null && !connection.isClosed()) {
             connection.close();
+            System.out.println("Đóng kết nối cơ sở dữ liệu thành công.");
         }
     }
 }

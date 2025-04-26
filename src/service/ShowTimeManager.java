@@ -43,7 +43,19 @@ public class ShowTimeManager {
     public List<Showtimes> getAllShowtimes() throws SQLException {
         return showtimeDAO.getAllShowtimes();
     }
-
+    public int getNextShowtimeId() throws SQLException {
+        if (connection == null) {
+            throw new SQLException("Connection is null");
+        }
+        String sql = "SELECT MAX(ShowTimeID) + 1 FROM Showtimes";
+        try (var stmt = connection.createStatement();
+             var rs = stmt.executeQuery(sql)) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+            return 1; // Nếu bảng rỗng, bắt đầu từ 1
+        }
+    }
     // Đóng kết nối
     public void closeConnection() throws SQLException {
         if (connection != null && !connection.isClosed()) {

@@ -233,7 +233,7 @@ public class Seat_GUI extends JPanel implements ActionListener {
                 JOptionPane.YES_NO_OPTION
         );
         if (choice == JOptionPane.YES_OPTION) {
-            ProductSelectionScreen pss = new ProductSelectionScreen(mainFrame, showtimeID, ticketQuantity, ticketPrice, selectedSeats, room);
+            ProductSelectionGUI pss = new ProductSelectionGUI(mainFrame, showtimeID, ticketQuantity, ticketPrice, selectedSeats, room);
             mainFrame.showScreen("ProductSelection", pss);
         } else {
             // Lấy thông tin user từ MainFrame (giả sử MainFrame có phương thức getCurrentUser)
@@ -259,8 +259,8 @@ public class Seat_GUI extends JPanel implements ActionListener {
             // Tạo danh sách cart (List<Product_Orders>) rỗng nếu không chọn đồ ăn
             List<Product_Orders> cart = new ArrayList<Product_Orders>();
 
-            // Sửa constructor của ConfirmationScreen để bao gồm tham số Rooms
-            ConfirmationScreen cs = new ConfirmationScreen(
+            // Sửa constructor của ConfirmationGUI để bao gồm tham số Rooms
+            ConfirmationGUI cs = new ConfirmationGUI(
                 mainFrame, 
                 user, 
                 showtime, 

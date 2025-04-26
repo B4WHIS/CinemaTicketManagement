@@ -4,15 +4,18 @@ public class Rooms {
     private int roomID;
     private String roomName;
     private int capacity;
+    private String type;
 
-    public Rooms(int roomID, String roomName, int capacity) {
+    public Rooms(int roomID, String roomName, int capacity, String type) {
         this.roomID = roomID;
         this.roomName = roomName;
         this.capacity = capacity;
+        this.type = type;
         // B: Log khi tạo đối tượng Rooms
         System.out.println("Inside Rooms constructor - RoomID: " + this.roomID +
                 ", RoomName: " + this.roomName +
-                ", Capacity: " + this.capacity);
+                ", Capacity: " + this.capacity +
+                ", Type: " + this.type);
     }
 
     public int getRoomID() {
@@ -31,6 +34,10 @@ public class Rooms {
         return capacity;
     }
 
+    public String getType() {
+        return type;
+    }
+
     public void setRoomID(int roomID) {
         this.roomID = roomID;
     }
@@ -41,5 +48,9 @@ public class Rooms {
 
     public void setCapacity(int capacity) {
         this.capacity = capacity;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 }

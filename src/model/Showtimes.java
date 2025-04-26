@@ -40,7 +40,7 @@ public class Showtimes {
     public Rooms getRoom() {
         if (room == null) {
             System.err.println("Room is null for ShowtimeID: " + showTimeID);
-            return new Rooms(-1, "Phòng không hợp lệ", 0);
+            return new Rooms(-1, "Phòng không hợp lệ", 0,"...");
         }
         // B: Log khi getRoom được gọi
         System.out.println("getRoom called - ShowtimeID: " + showTimeID +

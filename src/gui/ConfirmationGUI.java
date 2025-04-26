@@ -1,5 +1,9 @@
 package gui;
 
+import dao.OrderDAO;
+import dao.ProductDAO;
+import dao.ProductOrderDAO;
+import dao.TicketDAO;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -10,7 +14,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
-
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -19,11 +22,6 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
-
-import dao.OrderDAO;
-import dao.ProductDAO;
-import dao.ProductOrderDAO;
-import dao.TicketDAO;
 import model.Orders;
 import model.Product_Orders;
 import model.Products;
@@ -33,7 +31,7 @@ import model.Showtimes;
 import model.Tickets;
 import model.Users;
 
-public class ConfirmationScreen extends JPanel {
+public class ConfirmationGUI extends JPanel {
     private MainFrame mainFrame;
     private Users user;
     private Showtimes showtime;
@@ -52,8 +50,8 @@ public class ConfirmationScreen extends JPanel {
     private JButton btnConfirm;
     private JButton btnBack;
 
-    // Sửa tên constructor từ public_RANGE_SCREEN thành ConfirmationScreen
-    public ConfirmationScreen(MainFrame mainFrame, Users user, Showtimes showtime, List<Product_Orders> cart,
+    // Sửa tên constructor từ public_RANGE_SCREEN thành ConfirmationGUI
+    public ConfirmationGUI(MainFrame mainFrame, Users user, Showtimes showtime, List<Product_Orders> cart,
                               List<Seats> selectedSeats, int ticketQuantity, BigDecimal ticketPrice, Rooms room) {
         this.mainFrame = mainFrame;
         this.user = user;

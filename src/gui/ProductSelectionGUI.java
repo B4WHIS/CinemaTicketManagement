@@ -33,7 +33,7 @@ import model.Seats;
 import model.Showtimes;
 import model.Users;
 
-public class ProductSelectionScreen extends JPanel implements ActionListener {
+public class ProductSelectionGUI extends JPanel implements ActionListener {
     private List<Product_Orders> cart;
     private Map<Integer, JLabel> quantityLabels;
     private Map<JButton, Products> minusButtonProductMap;
@@ -50,7 +50,7 @@ public class ProductSelectionScreen extends JPanel implements ActionListener {
     private ProductDAO productDAO;
     private Rooms room;
 
-    public ProductSelectionScreen(MainFrame mainFrame, int showtimeID, int ticketQuantity, BigDecimal ticketPrice, List<Seats> selectedSeats, Rooms room) {
+    public ProductSelectionGUI(MainFrame mainFrame, int showtimeID, int ticketQuantity, BigDecimal ticketPrice, List<Seats> selectedSeats, Rooms room) {
         this.mainFrame = mainFrame;
         this.showtimeID = showtimeID;
         this.ticketQuantity = ticketQuantity;
@@ -236,8 +236,8 @@ public class ProductSelectionScreen extends JPanel implements ActionListener {
                 return;
             }
 
-            // Truyền thêm đối tượng Rooms vào ConfirmationScreen
-            ConfirmationScreen cs = new ConfirmationScreen(
+            // Truyền thêm đối tượng Rooms vào ConfirmationGUI
+            ConfirmationGUI cs = new ConfirmationGUI(
                 mainFrame, 
                 user, 
                 showtime, 

@@ -111,7 +111,7 @@ public class Rooms_DAO {
                 int capacity = rs.getInt("Capacity");
 //                String type = rs.getString("Type");
 
-                return new Rooms(roomID, roomName, capacity);
+                return new Rooms(roomID, roomName, capacity, roomName);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -133,7 +133,7 @@ public class Rooms_DAO {
                 int capacity = rs.getInt("Capacity");
 //                String type = rs.getString("Type");
 
-                Rooms room = new Rooms(roomID,  roomName, capacity);
+                Rooms room = new Rooms(roomID,  roomName, capacity, roomName);
                 rooms.add(room);
             }
 

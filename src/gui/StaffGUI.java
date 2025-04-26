@@ -30,7 +30,7 @@ import model.Movies;
 import model.Users;
 import service.MovieManager;
 
-public class mainGUI extends JPanel {
+public class StaffGUI extends JPanel {
     private JPanel moviesPanel;
     private JTextField searchField;
     private MovieManager movieManager;
@@ -44,7 +44,7 @@ public class mainGUI extends JPanel {
     private JScrollPane scrollPane;
     private MainFrame mainFrame; // B: Thêm tham chiếu MainFrame
 
-    public mainGUI(Connection connection, CardLayout cardLayout, JPanel mainPanel, Users user, MainFrame mainFrame) {
+    public StaffGUI(Connection connection, CardLayout cardLayout, JPanel mainPanel, Users user, MainFrame mainFrame) {
         this.connection = connection;
         this.cardLayout = cardLayout;
         this.mainPanel = mainPanel;
@@ -64,15 +64,10 @@ public class mainGUI extends JPanel {
         // ==== Menu ngang ====
         JPanel menuPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         menuPanel.setBackground(Color.LIGHT_GRAY);
-        String[] menuItems = {"Dashboard", "Add Movie", "Available Movies", "Edit Screening", "Customers"};
+        String[] menuItems = {"Trang chủ", "Lịch sử đơn hàng", "Quản lý phim"};
         for (String item : menuItems) {
             JButton btn = new JButton(item);
-            if (item.equals("Add Movie")) {
-                btn.addActionListener(e -> {
-                    System.out.println("Opening AddMoviePanel");
-                    centerCardLayout.show(centerContentPanel, "AddMovie");
-                });
-            } else if (item.equals("Available Movies")) {
+            if (item.equals("Available Movies")) {
                 btn.addActionListener(e -> showMoviesPanel());
             }
             menuPanel.add(btn);
@@ -114,8 +109,8 @@ public class mainGUI extends JPanel {
         centerContentPanel.add(scrollPane, "Movies");
 
         // ==== Thêm AddMoviePanel vào centerContentPanel ====
-        addMoviePanel = new AddMoviePanel(connection, this);
-        centerContentPanel.add(addMoviePanel, "AddMovie");
+//        addMoviePanel = new AddMoviePanel(connection, this);
+//        centerContentPanel.add(addMoviePanel, "AddMovie");
 
         // ==== Thêm DetailFilm_GUI vào centerContentPanel ====
         try {
