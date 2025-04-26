@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
@@ -31,21 +30,21 @@ public class OrderDAO {
         boolean autoCommit = connection.getAutoCommit();
         connection.setAutoCommit(false);
         try {
-            // Lấy OrderID lớn nhất hiện tại
+            // Lấy OrderID lớn nhất hiện tại từ bảng Orders
             int newOrderID = 1;
-            String getMaxIDSql = "SELECT MAX(OrderID) FROM Orders WITH (UPDLOCK, HOLDLOCK)";
+            String getMaxIDSql = "SELECT MAX(OrderID) FROM Orders WITH (UPDLOCK, HOLDLOCK)"; // Sửa Orders_Old thành Orders
             try (PreparedStatement pstmt = connection.prepareStatement(getMaxIDSql);
                  ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
                     newOrderID = rs.getInt(1) + 1;
                 }
             }
-
+    
             // Gán OrderID cho đối tượng
             order.setOrderID(newOrderID);
-
-            // Chèn bản ghi với OrderID
-            String sql = "INSERT INTO Orders (OrderID, UserID, TotalAmount, OrderDate, PaymentMethodID) VALUES (?, ?, ?, ?, ?)";
+    
+            // Chèn bản ghi với OrderID vào bảng Orders
+            String sql = "INSERT INTO Orders (OrderID, UserID, TotalAmount, OrderDate, PaymentMethodID) VALUES (?, ?, ?, ?, ?)"; // Sửa Orders_Old thành Orders
             try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
                 pstmt.setInt(1, order.getOrderID());
                 pstmt.setInt(2, order.getUserID().getUserID());
@@ -54,45 +53,46 @@ public class OrderDAO {
                 pstmt.setInt(5, order.getPaymentMethod().getPaymentMethodID());
                 pstmt.executeUpdate();
             }
-
+    
             // Commit giao dịch
             connection.commit();
         } catch (SQLException e) {
             // Rollback nếu có lỗi
-        	connection.rollback();
+            connection.rollback();
             throw new SQLException("Lỗi khi lưu Order: " + e.getMessage(), e);
         } finally {
             // Khôi phục trạng thái autoCommit
-        	connection.setAutoCommit(autoCommit);
+            connection.setAutoCommit(autoCommit);
         }
     }
+
     public List<Orders> getOrdersByUser(int userID) throws SQLException {
         List<Orders> orders = new ArrayList<>();
-        String query = "SELECT o.orderID, o.userID, o.TotalAmount, o.orderDate, o.paymentMethodID, " +
-                      "u.userName, pm.paymentMethodName " +
+        String query = "SELECT o.OrderID, o.UserID, o.TotalAmount, o.OrderDate, o.PaymentMethodID, " +
+                      "u.UserName, pm.PaymentMethodName " +
                       "FROM Orders o " +
-                      "JOIN Users u ON o.userID = u.userID " +
-                      "JOIN PaymentMethods pm ON o.paymentMethodID = pm.paymentMethodID " +
-                      "WHERE o.userID = ?";
+                      "JOIN Users u ON o.UserID = u.UserID " +
+                      "JOIN PaymentMethods pm ON o.PaymentMethodID = pm.PaymentMethodID " +
+                      "WHERE o.UserID = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, userID);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     Orders order = new Orders();
-                    order.setOrderID(rs.getInt("orderID"));
+                    order.setOrderID(rs.getInt("OrderID"));
                     
                     Users user = new Users();
-                    user.setUserID(rs.getInt("userID"));
-                    user.setUserName(rs.getString("userName"));
+                    user.setUserID(rs.getInt("UserID"));
+                    user.setUserName(rs.getString("UserName"));
                     order.setUserID(user);
                     
                     order.setTotalAmount(rs.getDouble("TotalAmount"));
-                    order.setOrderDate(new Date(rs.getTimestamp("orderDate").getTime()));
+                    order.setOrderDate(new Date(rs.getTimestamp("OrderDate").getTime()));
                     
                     PaymentMethod pm = new PaymentMethod();
-                    pm.setPaymentMethodID(rs.getInt("paymentMethodID"));
-                    pm.setPaymentMethodName(rs.getString("paymentMethodName"));
+                    pm.setPaymentMethodID(rs.getInt("PaymentMethodID"));
+                    pm.setPaymentMethodName(rs.getString("PaymentMethodName"));
                     order.setPaymentMethod(pm);
                     
                     orders.add(order);
@@ -103,31 +103,31 @@ public class OrderDAO {
     }
 
     public Orders getOrderById(int orderID) throws SQLException {
-        String query = "SELECT o.orderID, o.userID, o.TotalAmount, o.orderDate, o.paymentMethodID, " +
-                      "u.userName, pm.paymentMethodName " +
+        String query = "SELECT o.OrderID, o.UserID, o.TotalAmount, o.OrderDate, o.PaymentMethodID, " +
+                      "u.UserName, pm.PaymentMethodName " +
                       "FROM Orders o " +
-                      "JOIN Users u ON o.userID = u.userID " +
-                      "JOIN PaymentMethods pm ON o.paymentMethodID = pm.paymentMethodID " +
-                      "WHERE o.orderID = ?";
+                      "JOIN Users u ON o.UserID = u.UserID " +
+                      "JOIN PaymentMethods pm ON o.PaymentMethodID = pm.PaymentMethodID " +
+                      "WHERE o.OrderID = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, orderID);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     Orders order = new Orders();
-                    order.setOrderID(rs.getInt("orderID"));
+                    order.setOrderID(rs.getInt("OrderID"));
                     
                     Users user = new Users();
-                    user.setUserID(rs.getInt("userID"));
-                    user.setUserName(rs.getString("userName"));
+                    user.setUserID(rs.getInt("UserID"));
+                    user.setUserName(rs.getString("UserName"));
                     order.setUserID(user);
                     
                     order.setTotalAmount(rs.getDouble("TotalAmount"));
-                    order.setOrderDate(new Date(rs.getTimestamp("orderDate").getTime()));
+                    order.setOrderDate(new Date(rs.getTimestamp("OrderDate").getTime()));
                     
                     PaymentMethod pm = new PaymentMethod();
-                    pm.setPaymentMethodID(rs.getInt("paymentMethodID"));
-                    pm.setPaymentMethodName(rs.getString("paymentMethodName"));
+                    pm.setPaymentMethodID(rs.getInt("PaymentMethodID"));
+                    pm.setPaymentMethodName(rs.getString("PaymentMethodName"));
                     order.setPaymentMethod(pm);
                     
                     return order;
