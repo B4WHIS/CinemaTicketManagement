@@ -24,7 +24,7 @@ public class SeatManager {
 
     // Lấy ghế theo ID (Read - chi tiết)
     public Seats getSeat(int seatID) throws SQLException {
-        Seats seat = seatDAO.getSeatById(seatID);
+        Seats seat = seatDAO.getSeatByID(seatID);
         if (seat == null) {
             throw new SQLException("Không tìm thấy ghế với ID: " + seatID);
         }
