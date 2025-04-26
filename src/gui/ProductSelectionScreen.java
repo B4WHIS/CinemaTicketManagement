@@ -105,7 +105,6 @@ public class ProductSelectionScreen extends JPanel implements ActionListener {
 
             JPanel infoPanel = new JPanel();
             infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
-
             infoPanel.setBackground(Color.WHITE);
 
             JLabel nameLabel = new JLabel(product.getProductName(), JLabel.CENTER);
@@ -169,15 +168,15 @@ public class ProductSelectionScreen extends JPanel implements ActionListener {
 
         backButton = new JButton("← Quay lại");
         backButton.setFont(new Font("Times New Roman", Font.PLAIN, 16));
-        backButton.setBackground(Color.WHITE);
-        backButton.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        backButton.setBackground(Color.RED);
+        backButton.setForeground(Color.WHITE);
         backButton.addActionListener(this);
         navigationPanel.add(backButton, BorderLayout.WEST);
 
         orderButton = new JButton("Đặt hàng →");
         orderButton.setFont(new Font("Times New Roman", Font.PLAIN, 16));
-        orderButton.setBackground(Color.WHITE);
-        orderButton.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        orderButton.setBackground(Color.GREEN);
+        orderButton.setForeground(Color.WHITE);
         orderButton.addActionListener(this);
         navigationPanel.add(orderButton, BorderLayout.EAST);
 
@@ -219,14 +218,12 @@ public class ProductSelectionScreen extends JPanel implements ActionListener {
                 JOptionPane.showMessageDialog(this, "Lỗi khi quay lại: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
         } else if (e.getSource() == orderButton) {
-            // Lấy thông tin user từ MainFrame (giả sử MainFrame có phương thức getCurrentUser)
             Users user = mainFrame.getUser();
             if (user == null) {
                 JOptionPane.showMessageDialog(this, "Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
-            // Lấy thông tin Showtimes từ showtimeID
             Showtimes_DAO showtimeDAO = new Showtimes_DAO(mainFrame.getConnection());
             Showtimes showtime;
             try {
@@ -239,7 +236,7 @@ public class ProductSelectionScreen extends JPanel implements ActionListener {
                 return;
             }
 
-            // Tạo ConfirmationScreen và hiển thị qua MainFrame
+            // Truyền thêm đối tượng Rooms vào ConfirmationScreen
             ConfirmationScreen cs = new ConfirmationScreen(
                 mainFrame, 
                 user, 
@@ -247,7 +244,8 @@ public class ProductSelectionScreen extends JPanel implements ActionListener {
                 cart, 
                 selectedSeats, 
                 ticketQuantity, 
-                ticketPrice
+                ticketPrice,
+                room // Thêm đối tượng Rooms
             );
             mainFrame.showScreen("Confirmation", cs);
         }
@@ -259,7 +257,8 @@ public class ProductSelectionScreen extends JPanel implements ActionListener {
             Product_Orders po = new Product_Orders();
             po.setProductID(productID);
             po.setQuantity(quantity);
-            po.setTotalPrice(product.getPrice() * quantity); // Tính TotalPrice = Price * Quantity
+            po.setTotalPrice(product.getPrice() * quantity);
+            po.setProduct(product);
             cart.add(po);
         }
         updateTotal();

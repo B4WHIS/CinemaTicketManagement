@@ -259,7 +259,7 @@ public class Seat_GUI extends JPanel implements ActionListener {
             // Tạo danh sách cart (List<Product_Orders>) rỗng nếu không chọn đồ ăn
             List<Product_Orders> cart = new ArrayList<Product_Orders>();
 
-            // Tạo ConfirmationScreen với đúng tham số
+            // Sửa constructor của ConfirmationScreen để bao gồm tham số Rooms
             ConfirmationScreen cs = new ConfirmationScreen(
                 mainFrame, 
                 user, 
@@ -267,7 +267,8 @@ public class Seat_GUI extends JPanel implements ActionListener {
                 cart, 
                 selectedSeats, 
                 ticketQuantity, 
-                ticketPrice
+                ticketPrice,
+                room // Thêm tham số Rooms
             );
             mainFrame.showScreen("Confirmation", cs);
         }

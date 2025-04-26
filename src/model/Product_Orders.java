@@ -6,6 +6,7 @@ public class Product_Orders {
     private int productID;
     private int quantity;
     private double totalPrice;
+    private Products product; 
 
     public Product_Orders() {
     }
@@ -18,43 +19,54 @@ public class Product_Orders {
         this.totalPrice = totalPrice;
     }
 
-    public Orders getOrderID() {
-        return orderID;
-    }
+	public int getProductOrderID() {
+		return productOrderID;
+	}
 
-    public void setOrderID(Orders orderID) {
-        this.orderID = orderID;
-    }
+	public void setProductOrderID(int productOrderID) {
+		this.productOrderID = productOrderID;
+	}
 
-    public int getProductID() {
-        return productID;
-    }
+	public Orders getOrderID() {
+		return orderID;
+	}
 
-    public void setProductID(int productID) {
-        this.productID = productID;
-    }
+	public void setOrderID(Orders orderID) {
+		this.orderID = orderID;
+	}
 
-    public int getQuantity() {
-        return quantity;
-    }
+	public int getProductID() {
+		return productID;
+	}
 
-    public void setQuantity(int quantity) {
-        this.quantity = quantity;
-    }
+	public void setProductID(int productID) {
+		this.productID = productID;
+	}
 
-    public double getTotalPrice() {
-        return totalPrice;
-    }
+	public int getQuantity() {
+		return quantity;
+	}
 
-    public void setTotalPrice(double totalPrice) {
-        this.totalPrice = totalPrice;
-    }
+	public void setQuantity(int quantity) {
+		this.quantity = quantity;
+	}
 
-    public int getProductOrderID() {
-        return productOrderID;
-    }
+	public double getTotalPrice() {
+		return totalPrice;
+	}
 
-    public void setProductOrderID(int productOrderID) {
-        this.productOrderID = productOrderID;
-    }
+	public void setTotalPrice(double totalPrice) {
+		this.totalPrice = totalPrice;
+	}
+
+	public Products getProduct() {
+		return product;
+	}
+
+	public void setProduct(Products product) {
+		this.product = product;
+	}
+
+   
+    
 }

@@ -1,19 +1,33 @@
 package gui;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 
 import dao.OrderDAO;
+import dao.ProductDAO;
 import dao.ProductOrderDAO;
 import dao.TicketDAO;
 import model.Orders;
 import model.Product_Orders;
+import model.Products;
+import model.Rooms;
 import model.Seats;
 import model.Showtimes;
 import model.Tickets;
@@ -27,16 +41,20 @@ public class ConfirmationScreen extends JPanel {
     private List<Seats> selectedSeats;
     private int ticketQuantity;
     private BigDecimal ticketPrice;
+    private Rooms room;
 
     private JLabel lblMovieTitle;
     private JLabel lblShowtime;
+    private JLabel lblRoom;
     private JLabel lblSeats;
+    private JLabel lblCart;
     private JLabel lblTotalAmount;
     private JButton btnConfirm;
-    private JButton btnCancel;
+    private JButton btnBack;
 
+    // Sửa tên constructor từ public_RANGE_SCREEN thành ConfirmationScreen
     public ConfirmationScreen(MainFrame mainFrame, Users user, Showtimes showtime, List<Product_Orders> cart,
-                              List<Seats> selectedSeats, int ticketQuantity, BigDecimal ticketPrice) {
+                              List<Seats> selectedSeats, int ticketQuantity, BigDecimal ticketPrice, Rooms room) {
         this.mainFrame = mainFrame;
         this.user = user;
         this.showtime = showtime;
@@ -44,8 +62,11 @@ public class ConfirmationScreen extends JPanel {
         this.selectedSeats = selectedSeats;
         this.ticketQuantity = ticketQuantity;
         this.ticketPrice = ticketPrice;
+        this.room = room;
 
-        // Đặt kích thước cố định cho JPanel
+        // Lấy thông tin sản phẩm cho từng mục trong cart
+        loadProductDetails();
+
         setPreferredSize(new Dimension(400, 300));
         setLayout(new BorderLayout());
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -62,32 +83,60 @@ public class ConfirmationScreen extends JPanel {
 
         lblMovieTitle = new JLabel("Phim: " + showtime.getMovie().getTitle());
         lblShowtime = new JLabel("Suất chiếu: " + showtime.getStartTime().toString());
+        lblRoom = new JLabel("Phòng chiếu: " + (room != null ? room.getRoomName() : "Không xác định"));
         lblSeats = new JLabel("Ghế: " + getSelectedSeatsString());
+        lblCart = new JLabel("Món ăn: " + getCartString());
         lblTotalAmount = new JLabel("Tổng tiền: " + getFormattedTotalAmount());
+
+        // Panel chứa các nút điều hướng
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
+        buttonPanel.setBackground(null);
+
+        btnBack = new JButton("Trở về");
+        btnBack.setBackground(Color.RED);
+        btnBack.setForeground(Color.WHITE);
+        btnBack.setFont(new Font("Times New Roman", Font.PLAIN, 14));
+        btnBack.addActionListener(e -> mainFrame.showScreen("SeatScreen", null));
 
         btnConfirm = new JButton("Xác nhận");
         btnConfirm.setBackground(Color.GREEN);
         btnConfirm.setForeground(Color.WHITE);
+        btnConfirm.setFont(new Font("Times New Roman", Font.PLAIN, 14));
         btnConfirm.addActionListener(e -> confirmBooking());
 
-        btnCancel = new JButton("Hủy");
-        btnCancel.setBackground(Color.RED);
-        btnCancel.setForeground(Color.WHITE);
-        btnCancel.addActionListener(e -> mainFrame.showScreen("SeatScreen", null)); // Quay lại màn hình chọn ghế
+        buttonPanel.add(btnBack);
+        buttonPanel.add(btnConfirm);
 
         infoPanel.add(lblMovieTitle);
         infoPanel.add(Box.createVerticalStrut(10));
         infoPanel.add(lblShowtime);
         infoPanel.add(Box.createVerticalStrut(10));
+        infoPanel.add(lblRoom);
+        infoPanel.add(Box.createVerticalStrut(10));
         infoPanel.add(lblSeats);
+        infoPanel.add(Box.createVerticalStrut(10));
+        infoPanel.add(lblCart);
         infoPanel.add(Box.createVerticalStrut(10));
         infoPanel.add(lblTotalAmount);
         infoPanel.add(Box.createVerticalStrut(20));
-        infoPanel.add(btnConfirm);
-        infoPanel.add(Box.createVerticalStrut(10));
-        infoPanel.add(btnCancel);
+        infoPanel.add(buttonPanel);
 
         add(infoPanel, BorderLayout.CENTER);
+    }
+
+    private void loadProductDetails() {
+        ProductDAO productDAO = new ProductDAO(mainFrame.getConnection());
+        try {
+            for (Product_Orders po : cart) {
+                if (po.getProduct() == null) {
+                    Products product = productDAO.getProductById(po.getProductID());
+                    po.setProduct(product);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Lỗi khi tải thông tin sản phẩm: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private String getSelectedSeatsString() {
@@ -97,6 +146,23 @@ public class ConfirmationScreen extends JPanel {
         StringBuilder sb = new StringBuilder();
         for (Seats seat : selectedSeats) {
             sb.append(seat.getSeatNumber()).append(", ");
+        }
+        return sb.length() > 0 ? sb.substring(0, sb.length() - 2) : "";
+    }
+
+    private String getCartString() {
+        if (cart == null || cart.isEmpty()) {
+            return "Không có món ăn nào được chọn";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (Product_Orders po : cart) {
+            String productName = (po.getProduct() != null && po.getProduct().getProductName() != null)
+                                ? po.getProduct().getProductName()
+                                : "Unknown Product";
+            sb.append(productName)
+              .append(" x")
+              .append(po.getQuantity())
+              .append(", ");
         }
         return sb.length() > 0 ? sb.substring(0, sb.length() - 2) : "";
     }
@@ -112,17 +178,21 @@ public class ConfirmationScreen extends JPanel {
     }
 
     private void confirmBooking() {
+        if (selectedSeats.size() != ticketQuantity) {
+            JOptionPane.showMessageDialog(this, "Số lượng ghế (" + selectedSeats.size() + ") không khớp với số lượng vé (" + ticketQuantity + ")!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
         Orders order = new Orders();
         order.setUserID(user);
-        order.setTotalAmount(calculateTotalAmount()); // Sử dụng giá trị double trực tiếp
+        order.setTotalAmount(calculateTotalAmount());
         order.setOrderDate(new java.util.Date());
-        order.setPaymentMethod(new model.PaymentMethod(1, "Cash")); // Giả sử mặc định
+        order.setPaymentMethod(new model.PaymentMethod(1, "Cash"));
 
         Connection conn = mainFrame.getConnection();
         try {
             conn.setAutoCommit(false);
 
-            // Lưu đơn hàng
             OrderDAO orderDAO = new OrderDAO(conn);
             orderDAO.saveOrder(order);
             if (order.getOrderID() <= 0) {
@@ -130,18 +200,13 @@ public class ConfirmationScreen extends JPanel {
             }
             System.out.println("Order saved with orderID: " + order.getOrderID());
 
-            // Lưu sản phẩm trong đơn hàng
             ProductOrderDAO productOrderDAO = new ProductOrderDAO(conn);
             for (Product_Orders po : cart) {
                 po.setOrderID(order);
                 productOrderDAO.saveProductOrder(po);
             }
 
-            // Lưu vé
             TicketDAO ticketDAO = new TicketDAO(conn);
-            if (selectedSeats == null || selectedSeats.size() < ticketQuantity) {
-                throw new IllegalStateException("Không đủ ghế đã chọn cho số lượng vé.");
-            }
             for (int i = 0; i < ticketQuantity; i++) {
                 Tickets ticket = new Tickets();
                 Showtimes showtimeObj = new Showtimes();
@@ -157,7 +222,7 @@ public class ConfirmationScreen extends JPanel {
 
             conn.commit();
             JOptionPane.showMessageDialog(this, "Đặt vé thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
-            mainFrame.showScreen("MainScreen", null); // Quay về màn hình chính sau khi đặt vé thành công
+            mainFrame.showScreen("MainScreen", null);
         } catch (SQLException e) {
             try {
                 conn.rollback();
