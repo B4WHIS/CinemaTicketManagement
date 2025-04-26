@@ -31,21 +31,21 @@ public class OrderDAO {
         boolean autoCommit = connection.getAutoCommit();
         connection.setAutoCommit(false);
         try {
-            // Lấy OrderID lớn nhất hiện tại
+            // Lấy OrderID lớn nhất hiện tại từ bảng Orders_Old
             int newOrderID = 1;
-            String getMaxIDSql = "SELECT MAX(OrderID) FROM Orders WITH (UPDLOCK, HOLDLOCK)";
+            String getMaxIDSql = "SELECT MAX(OrderID) FROM Orders_Old WITH (UPDLOCK, HOLDLOCK)";
             try (PreparedStatement pstmt = connection.prepareStatement(getMaxIDSql);
                  ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
                     newOrderID = rs.getInt(1) + 1;
                 }
             }
-
+    
             // Gán OrderID cho đối tượng
             order.setOrderID(newOrderID);
-
-            // Chèn bản ghi với OrderID
-            String sql = "INSERT INTO Orders (OrderID, UserID, TotalAmount, OrderDate, PaymentMethodID) VALUES (?, ?, ?, ?, ?)";
+    
+            // Chèn bản ghi với OrderID vào bảng Orders_Old
+            String sql = "INSERT INTO Orders_Old (OrderID, UserID, TotalAmount, OrderDate, PaymentMethodID) VALUES (?, ?, ?, ?, ?)";
             try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
                 pstmt.setInt(1, order.getOrderID());
                 pstmt.setInt(2, order.getUserID().getUserID());
@@ -54,16 +54,16 @@ public class OrderDAO {
                 pstmt.setInt(5, order.getPaymentMethod().getPaymentMethodID());
                 pstmt.executeUpdate();
             }
-
+    
             // Commit giao dịch
             connection.commit();
         } catch (SQLException e) {
             // Rollback nếu có lỗi
-        	connection.rollback();
+            connection.rollback();
             throw new SQLException("Lỗi khi lưu Order: " + e.getMessage(), e);
         } finally {
             // Khôi phục trạng thái autoCommit
-        	connection.setAutoCommit(autoCommit);
+            connection.setAutoCommit(autoCommit);
         }
     }
     public List<Orders> getOrdersByUser(int userID) throws SQLException {
