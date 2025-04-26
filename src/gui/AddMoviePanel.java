@@ -1,8 +1,8 @@
 package gui;
 
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -12,13 +12,23 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Time;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.List;
-import javax.swing.*;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
+
 import model.Movies;
 import model.Rooms;
 import model.Showtimes;
@@ -36,11 +46,11 @@ public class AddMoviePanel extends JPanel {
     private MovieManager moviesManager;
     private RoomManager roomManager;
     private ShowTimeManager showTimeManager;
-    private mainGUI mainGui;
+    private AdminGUI mainGui;
     private File selectedImageFile;
     private List<Rooms> roomsList;
 
-    public AddMoviePanel(Connection connection, mainGUI mainGui) {
+    public AddMoviePanel(Connection connection, AdminGUI mainGui2) {
         this.mainGui = mainGui;
         try {
             // Khởi tạo các manager

@@ -200,7 +200,7 @@ public class ConfirmationScreen extends JPanel implements ActionListener {
                 }
 
                 JOptionPane.showMessageDialog(this, "Đặt hàng thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
-                mainFrame.showScreen("MainGUI", new mainGUI(mainFrame.getConnection(), mainFrame.getCardLayout(), mainFrame.getMainPanel(), mainFrame.getUser(), mainFrame));
+                mainFrame.showScreen("MainGUI", new StaffGUI(mainFrame.getConnection(), mainFrame.getCardLayout(), mainFrame.getMainPanel(), mainFrame.getUser(), mainFrame));
             } catch (SQLException ex) {
                 ex.printStackTrace();
                 JOptionPane.showMessageDialog(this, "Lỗi khi lưu đơn hàng: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);

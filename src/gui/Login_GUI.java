@@ -106,7 +106,13 @@ public class Login_GUI extends JFrame implements ActionListener {
             try {
                 Users user = userManager.loginUser(username, password);
                 if (user != null) {
+                    //B: Kiểm tra roleID để chuyển hướng giao diện
                     MainFrame mainFrame = new MainFrame(connection, user);
+                    if (user.getRoleID() == 1) {
+                        mainFrame.showMainGUI2(); //B: roleID = 1 thì vào AdminGUI (admin)
+                    } else if (user.getRoleID() == 2) {
+                        mainFrame.showMainGUI(); //B: roleID = 2 thì vào StaffGUI (staff)
+                    }
                     mainFrame.setVisible(true);
                     dispose();
                 } else {
