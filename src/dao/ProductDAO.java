@@ -1,36 +1,41 @@
 package dao;
 
-import model.Products;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import dbs.connectDB;
+import model.Products;
+
 public class ProductDAO {
-    private Connection getConnection() throws SQLException {
-        String url = "jdbc:mysql://localhost:1433/databaseName=CinemaTickerManagement"; 
-        String user = "sa";
-        String password = "sapassword"; 
-        return DriverManager.getConnection(url, user, password);
+    private Connection connection;
+
+    public ProductDAO() {
+        this.connection = connectDB.getConnection();
+    }
+
+    public ProductDAO(Connection connection) {
+        this.connection = connection;
     }
 
     // Lấy tất cả sản phẩm
     public List<Products> getAllProducts() throws SQLException {
         List<Products> products = new ArrayList<>();
-        String query = "SELECT * FROM Products";
+        // B: Sửa truy vấn SQL để không lấy cột 'type' không tồn tại
+        String query = "SELECT productID, productName, price, image FROM Products";
 
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query);
+        try (PreparedStatement stmt = connection.prepareStatement(query);
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 Products product = new Products();
                 product.setProductID(rs.getInt("productID"));
                 product.setProductName(rs.getString("productName"));
                 product.setPrice(rs.getDouble("price"));
-                product.setType(rs.getString("type"));
+                // B: Xóa dòng setType vì cột 'type' không tồn tại
+                // product.setType(rs.getString("type"));
                 product.setImage(rs.getBytes("image"));
                 products.add(product);
             }
@@ -40,10 +45,10 @@ public class ProductDAO {
 
     // Lấy sản phẩm theo ID
     public Products getProductById(int id) throws SQLException {
-        String query = "SELECT * FROM Products WHERE productID = ?";
+        // B: Sửa truy vấn SQL để không lấy cột 'type' không tồn tại
+        String query = "SELECT productID, productName, price, image FROM Products WHERE productID = ?";
 
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, id);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -51,40 +56,43 @@ public class ProductDAO {
                     product.setProductID(rs.getInt("productID"));
                     product.setProductName(rs.getString("productName"));
                     product.setPrice(rs.getDouble("price"));
-                    product.setType(rs.getString("type"));
+                    // B: Xóa dòng setType vì cột 'type' không tồn tại
+                    // product.setType(rs.getString("type"));
                     product.setImage(rs.getBytes("image"));
                     return product;
                 }
             }
         }
-        return null; // Trả về null nếu không tìm thấy
+        return null;
     }
 
     // Thêm sản phẩm mới
     public void addProduct(Products product) throws SQLException {
-        String query = "INSERT INTO Products (productName, price, type, image) VALUES (?, ?, ?, ?)";
+        // B: Sửa truy vấn SQL để không thêm cột 'type' không tồn tại
+        String query = "INSERT INTO Products (productName, price, image) VALUES (?, ?, ?)";
 
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, product.getProductName());
             stmt.setDouble(2, product.getPrice());
-            stmt.setString(3, product.getType());
-            stmt.setBytes(4, product.getImage());
+            // B: Xóa dòng set giá trị cho cột 'type'
+            // stmt.setString(3, product.getType());
+            stmt.setBytes(3, product.getImage());
             stmt.executeUpdate();
         }
     }
 
     // Cập nhật sản phẩm
     public void updateProduct(Products product) throws SQLException {
-        String query = "UPDATE Products SET productName = ?, price = ?, type = ?, image = ? WHERE productID = ?";
+        // B: Sửa truy vấn SQL để không cập nhật cột 'type' không tồn tại
+        String query = "UPDATE Products SET productName = ?, price = ?, image = ? WHERE productID = ?";
 
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, product.getProductName());
             stmt.setDouble(2, product.getPrice());
-            stmt.setString(3, product.getType());
-            stmt.setBytes(4, product.getImage());
-            stmt.setInt(5, product.getProductID());
+            // B: Xóa dòng set giá trị cho cột 'type'
+            // stmt.setString(3, product.getType());
+            stmt.setBytes(3, product.getImage());
+            stmt.setInt(4, product.getProductID());
             stmt.executeUpdate();
         }
     }
@@ -93,10 +101,15 @@ public class ProductDAO {
     public void deleteProduct(int id) throws SQLException {
         String query = "DELETE FROM Products WHERE productID = ?";
 
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, id);
             stmt.executeUpdate();
+        }
+    }
+
+    public void closeConnection() throws SQLException {
+        if (connection != null && !connection.isClosed()) {
+            connection.close();
         }
     }
 }

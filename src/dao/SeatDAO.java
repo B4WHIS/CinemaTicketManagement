@@ -1,6 +1,5 @@
 package dao;
 
-import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -13,72 +12,102 @@ import model.Rooms;
 import model.Seats;
 
 public class SeatDAO {
-    private final Connection con;
+    private Connection connection;
 
-    public SeatDAO() {
-        this.con = connectDB.getConnection();
+    public SeatDAO(Connection connection) {
+        this.connection = connection;
     }
 
-    public SeatDAO(Connection conn) {
-        this.con = conn;
+    public SeatDAO() {
+        this.connection = connectDB.getConnection();
     }
 
     private void ensureConnection() throws SQLException {
-        if (con == null || con.isClosed()) {
-            throw new SQLException("Kết nối cơ sở dữ liệu không khả dụng.");
-        }
-    }
-
-    // Thêm một ghế mới 
-    public void addSeat(Seats seat) throws SQLException {
-        ensureConnection();
-        String query = "INSERT INTO Seats (roomID, seatNumber) VALUES (?, ?)";
-        try (PreparedStatement ps = con.prepareStatement(query)) {
-            ps.setInt(1, seat.getRoomID().getRoomID());
-            ps.setString(2, seat.getSeatNumber());
-            ps.executeUpdate();
-        }
-    }
-
-    // Lấy tất cả ghế
-    public List<Seats> getAllSeats() throws SQLException {
-        ensureConnection();
-        List<Seats> seats = new ArrayList<>();
-        String query = "SELECT * FROM Seats";
-        try (PreparedStatement ps = con.prepareStatement(query);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                Seats seat = createSeatFromResultSet(rs);
-                seats.add(seat);
+        if (connection == null || connection.isClosed()) {
+            connection = connectDB.getConnection();
+            if (connection == null || connection.isClosed()) {
+                throw new SQLException("Không thể kết nối tới cơ sở dữ liệu.");
             }
         }
-        return seats;
     }
 
-    // Lấy ghế theo ID
-    public Seats getSeatById(int seatID) throws SQLException {
+    public boolean addSeat(Seats seat) throws SQLException {
         ensureConnection();
-        String query = "SELECT * FROM Seats WHERE seatID = ?";
-        try (PreparedStatement ps = con.prepareStatement(query)) {
-            ps.setInt(1, seatID);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return createSeatFromResultSet(rs);
+
+        String checkSql = "SELECT COUNT(*) FROM Seats WHERE SeatID = ?";
+        try (PreparedStatement checkStmt = connection.prepareStatement(checkSql)) {
+            checkStmt.setInt(1, seat.getSeatID());
+            try (ResultSet rs = checkStmt.executeQuery()) {
+                if (rs.next() && rs.getInt(1) > 0) {
+                    return false;
                 }
             }
         }
-        return null;
+
+        String sql = "INSERT INTO Seats (SeatID, SeatNumber, RoomID) VALUES (?, ?, ?)";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, seat.getSeatID());
+            stmt.setString(2, seat.getSeatNumber());
+            stmt.setInt(3, seat.getRoom().getRoomID());
+            stmt.executeUpdate();
+            return true;
+        }
     }
 
-    // Lấy danh sách ghế theo phòng (không kèm trạng thái)
+    public boolean updateSeat(Seats seat) throws SQLException {
+        ensureConnection();
+
+        String checkSql = "SELECT COUNT(*) FROM Seats WHERE SeatID = ?";
+        try (PreparedStatement checkStmt = connection.prepareStatement(checkSql)) {
+            checkStmt.setInt(1, seat.getSeatID());
+            try (ResultSet rs = checkStmt.executeQuery()) {
+                if (rs.next() && rs.getInt(1) == 0) {
+                    return false;
+                }
+            }
+        }
+
+        String sql = "UPDATE Seats SET SeatNumber = ?, RoomID = ? WHERE SeatID = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, seat.getSeatNumber());
+            stmt.setInt(2, seat.getRoom().getRoomID());
+            stmt.setInt(3, seat.getSeatID());
+            stmt.executeUpdate();
+            return true;
+        }
+    }
+
+    public boolean deleteSeat(int seatID) throws SQLException {
+        ensureConnection();
+
+        String checkSql = "SELECT COUNT(*) FROM Seats WHERE SeatID = ?";
+        try (PreparedStatement checkStmt = connection.prepareStatement(checkSql)) {
+            checkStmt.setInt(1, seatID);
+            try (ResultSet rs = checkStmt.executeQuery()) {
+                if (rs.next() && rs.getInt(1) == 0) {
+                    return false;
+                }
+            }
+        }
+
+        String sql = "DELETE FROM Seats WHERE SeatID = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, seatID);
+            stmt.executeUpdate();
+            return true;
+        }
+    }
+
     public List<Seats> getSeatsByRoom(Rooms room) throws SQLException {
         ensureConnection();
-        List<Seats> seats = new ArrayList<>();
 
-        // Gọi stored procedure sp_GetSeatsByRoom
-        try (CallableStatement stmt = con.prepareCall("{call sp_GetSeatsByRoom(?, ?)}")) {
+        List<Seats> seats = new ArrayList<>();
+        String sql = "SELECT s.SeatID, s.SeatNumber, s.RoomID, r.RoomName, r.Capacity " +
+                     "FROM Seats s " +
+                     "JOIN Rooms r ON s.RoomID = r.RoomID " +
+                     "WHERE s.RoomID = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, room.getRoomID());
-            stmt.setNull(2, java.sql.Types.INTEGER); // Không cung cấp ShowtimeID
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     Seats seat = createSeatFromResultSet(rs);
@@ -89,96 +118,39 @@ public class SeatDAO {
         return seats;
     }
 
-    // Lấy danh sách ghế kèm trạng thái theo suất chiếu
-    public List<SeatWithStatus> getSeatsWithStatus(int showtimeID, Rooms room) throws SQLException {
+    public Seats getSeatByID(int seatID) throws SQLException {
         ensureConnection();
-        List<SeatWithStatus> seatsWithStatus = new ArrayList<>();
 
-        // Gọi stored procedure sp_GetSeatsByRoom với ShowtimeID
-        try (CallableStatement stmt = con.prepareCall("{call sp_GetSeatsByRoom(?, ?)}")) {
-            stmt.setInt(1, room.getRoomID());
-            stmt.setInt(2, showtimeID);
+        String sql = "SELECT s.SeatID, s.SeatNumber, s.RoomID, r.RoomName, r.Capacity " +
+                     "FROM Seats s " +
+                     "JOIN Rooms r ON s.RoomID = r.RoomID " +
+                     "WHERE s.SeatID = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, seatID);
             try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    seatsWithStatus.add(new SeatWithStatus(
-                            rs.getInt("SeatID"),
-                            rs.getInt("RoomID"),
-                            rs.getString("SeatNumber"),
-                            rs.getString("Status")
-                    ));
+                if (rs.next()) {
+                    return createSeatFromResultSet(rs);
                 }
             }
         }
-        return seatsWithStatus;
+        return null;
     }
 
-    // Cập nhật ghế
-    public void updateSeat(Seats seat) throws SQLException {
-        ensureConnection();
-        String query = "UPDATE Seats SET roomID = ?, seatNumber = ? WHERE seatID = ?";
-        try (PreparedStatement ps = con.prepareStatement(query)) {
-            ps.setInt(1, seat.getRoomID().getRoomID());
-            ps.setString(2, seat.getSeatNumber());
-            ps.setInt(3, seat.getSeatID());
-            ps.executeUpdate();
-        }
-    }
-
-    // Xóa ghế 
-    public void deleteSeat(int seatID) throws SQLException {
-        ensureConnection();
-        String query = "DELETE FROM Seats WHERE seatID = ?";
-        try (PreparedStatement ps = con.prepareStatement(query)) {
-            ps.setInt(1, seatID);
-            ps.executeUpdate();
-        }
-    }
-
-    // Helper method to create Seat object from ResultSet
     private Seats createSeatFromResultSet(ResultSet rs) throws SQLException {
-        Seats seat = new Seats();
-        seat.setSeatID(rs.getInt("seatID"));
-        Rooms room = new Rooms();
-        room.setRoomID(rs.getInt("roomID"));
-        seat.setRoomID(room);
-        seat.setSeatNumber(rs.getString("seatNumber"));
-        return seat;
+        int seatID = rs.getInt("SeatID");
+        String seatNumber = rs.getString("SeatNumber");
+        int roomID = rs.getInt("RoomID");
+        String roomName = rs.getString("RoomName");
+        int capacity = rs.getInt("Capacity");
+
+        // Sử dụng constructor đầy đủ của Rooms
+        Rooms room = new Rooms(roomID, roomName != null ? roomName : "Phòng không xác định", capacity);
+        return new Seats(seatID, seatNumber, room);
     }
 
     public void closeConnection() throws SQLException {
-        if (con != null && !con.isClosed()) {
-            con.close();
+        if (connection != null && !connection.isClosed()) {
+            connection.close();
         }
-    }
-}
-
-// Lớp SeatWithStatus để lưu thông tin ghế kèm trạng thái
-class SeatWithStatus {
-    private int seatID;
-    private int roomID;
-    private String seatNumber;
-    private String status;
-
-    public SeatWithStatus(int seatID, int roomID, String seatNumber, String status) {
-        this.seatID = seatID;
-        this.roomID = roomID;
-        this.seatNumber = seatNumber;
-        this.status = status;
-    }
-
-    public int getSeatID() {
-        return seatID;
-    }
-
-    public int getRoomID() {
-        return roomID;
-    }
-
-    public String getSeatNumber() {
-        return seatNumber;
-    }
-
-    public String getStatus() {
-        return status;
     }
 }

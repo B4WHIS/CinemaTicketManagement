@@ -1,6 +1,5 @@
 package dao;
 
-import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -65,25 +64,38 @@ public class SeatStatusDAO {
         return seatStatuses;
     }
 
-    // Kiểm tra xem ghế có được đặt hay không (dùng sp_IsSeatBooked)
+    // Kiểm tra xem ghế có được đặt hay không
     public boolean isSeatBooked(int seatID, int showtimeID) throws SQLException {
         ensureConnection();
 
-        try (CallableStatement stmt = con.prepareCall("{call sp_IsSeatBooked(?, ?)}")) {
-            stmt.setInt(1, seatID);
-            stmt.setInt(2, showtimeID);
-            try (ResultSet rs = stmt.executeQuery()) {
+        // B: Kiểm tra xem có bản ghi trong SeatStatus không
+        String checkSql = "SELECT Status FROM SeatStatus WHERE ShowtimeID = ? AND SeatID = ?";
+        try (PreparedStatement checkStmt = con.prepareStatement(checkSql)) {
+            checkStmt.setInt(1, showtimeID);
+            checkStmt.setInt(2, seatID);
+            try (ResultSet rs = checkStmt.executeQuery()) {
                 if (rs.next()) {
-                    return rs.getInt("IsBooked") == 1;
+                    String status = rs.getString("Status");
+                    return "Booked".equalsIgnoreCase(status);
+                } else {
+                    // B: Nếu không có bản ghi, khởi tạo trạng thái Available
+                    String insertSql = "INSERT INTO SeatStatus (ShowtimeID, SeatID, Status) VALUES (?, ?, ?)";
+                    try (PreparedStatement insertStmt = con.prepareStatement(insertSql)) {
+                        insertStmt.setInt(1, showtimeID);
+                        insertStmt.setInt(2, seatID);
+                        insertStmt.setString(3, "Available");
+                        insertStmt.executeUpdate();
+                    }
+                    return false; // Ghế mới khởi tạo là Available
                 }
             }
         }
-        return false; // Mặc định là chưa đặt nếu không có kết quả
     }
 
-    // Cập nhật trạng thái ghế (dùng sp_UpdateSeatStatus)
+    // Cập nhật trạng thái ghế
     public boolean updateSeatStatus(int showtimeID, int seatID, String status) throws SQLException {
-        // Kiểm tra xem ghế đã được đặt chưa
+        ensureConnection();
+        // B: Kiểm tra xem bản ghi có tồn tại không
         String checkSql = "SELECT Status FROM SeatStatus WHERE ShowtimeID = ? AND SeatID = ?";
         try (PreparedStatement checkStmt = con.prepareStatement(checkSql)) {
             checkStmt.setInt(1, showtimeID);
@@ -91,50 +103,44 @@ public class SeatStatusDAO {
             ResultSet rs = checkStmt.executeQuery();
             
             if (rs.next()) {
-                // Bản ghi tồn tại, kiểm tra trạng thái
                 String currentStatus = rs.getString("Status");
-                if ("Booked".equalsIgnoreCase(currentStatus)) {
-                    // Ghế đã được đặt, không cho phép cập nhật
-                    System.out.println("Ghế SeatID=" + seatID + " đã được đặt cho ShowtimeID=" + showtimeID);
-                    return false;
+                if ("Booked".equalsIgnoreCase(currentStatus) && "Booked".equalsIgnoreCase(status)) {
+                    return false; // Ghế đã được đặt
                 }
-                // Trường hợp trạng thái khác (nếu có, ví dụ "Available"), không cập nhật mà trả về false
-                // Vì trong rạp chiếu phim, không nên cho phép thay đổi trạng thái ghế đã có
-                return false;
+                // B: Cập nhật trạng thái nếu bản ghi tồn tại
+                String updateSql = "UPDATE SeatStatus SET Status = ? WHERE ShowtimeID = ? AND SeatID = ?";
+                try (PreparedStatement updateStmt = con.prepareStatement(updateSql)) {
+                    updateStmt.setString(1, status);
+                    updateStmt.setInt(2, showtimeID);
+                    updateStmt.setInt(3, seatID);
+                    updateStmt.executeUpdate();
+                    return true;
+                }
             } else {
-                // Bản ghi chưa tồn tại, thêm mới với trạng thái Booked
+                // B: Thêm bản ghi mới nếu không tồn tại
                 String insertSql = "INSERT INTO SeatStatus (ShowtimeID, SeatID, Status) VALUES (?, ?, ?)";
                 try (PreparedStatement insertStmt = con.prepareStatement(insertSql)) {
                     insertStmt.setInt(1, showtimeID);
                     insertStmt.setInt(2, seatID);
                     insertStmt.setString(3, status);
                     insertStmt.executeUpdate();
-                    System.out.println("Đã thêm trạng thái ghế: ShowtimeID=" + showtimeID + ", SeatID=" + seatID + ", Status=" + status);
                     return true;
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false; // Trả về false nếu có lỗi
         }
     }
 
-    // Đặt ghế (gộp từ SeatStatusManager)
+    // Đặt ghế
     public boolean bookSeat(int showtimeID, int seatID) throws SQLException {
-        ensureConnection();
-        if (!isSeatBooked(seatID, showtimeID)) {
-            return updateSeatStatus(showtimeID, seatID, "Booked");
-        }
-        return false;
+        return updateSeatStatus(showtimeID, seatID, "Booked");
     }
 
-    // Hủy đặt ghế (gộp từ SeatStatusManager)
+    // Hủy đặt ghế
     public boolean cancelSeatBooking(int showtimeID, int seatID) throws SQLException {
-        ensureConnection();
         return updateSeatStatus(showtimeID, seatID, "Available");
     }
 
-    // Xóa trạng thái ghế của một suất chiếu (tùy chọn)
+    // Xóa trạng thái ghế của một suất chiếu
     public void deleteSeatStatusesByShowtime(int showtimeID) throws SQLException {
         ensureConnection();
         String sql = "DELETE FROM SeatStatus WHERE ShowtimeID = ?";

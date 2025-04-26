@@ -1,45 +1,37 @@
 package model;
 
 public class Seats {
-	private int seatID;
-	private Rooms roomID;
-	private String seatNumber;
-	
-	public Seats() {
-		
-	}
+    private int seatID;
+    private String seatNumber;
+    private Rooms room;
 
-	public Seats(int seatID, Rooms roomID, String seatNumber) {
-		this.seatID = seatID;
-		this.roomID = roomID;
-		this.seatNumber = seatNumber;
-	}
+    public Seats(int seatID, String seatNumber, Rooms room) {
+        this.seatID = seatID;
+        this.seatNumber = seatNumber;
+        this.room = room;
+    }
 
-	public int getSeatID() {
-		return seatID;
-	}
+    public int getSeatID() {
+        return seatID;
+    }
 
-	public void setSeatID(int seatID) {
-		this.seatID = seatID;
-	}
+    public String getSeatNumber() {
+        return seatNumber;
+    }
 
-	public Rooms getRoomID() {
-		return roomID;
-	}
+    public Rooms getRoom() {
+        return room;
+    }
 
-	public void setRoomID(Rooms roomID) {
-		this.roomID = roomID;
-	}
+    public void setSeatID(int seatID) {
+        this.seatID = seatID;
+    }
 
-	public String getSeatNumber() {
-		return seatNumber;
-	}
+    public void setSeatNumber(String seatNumber) {
+        this.seatNumber = seatNumber;
+    }
 
-	public void setSeatNumber(String seatNumber) {
-		this.seatNumber = seatNumber;
-	}
-
-	
-	
-	
+    public void setRoom(Rooms room) {
+        this.room = room;
+    }
 }

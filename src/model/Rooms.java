@@ -4,48 +4,42 @@ public class Rooms {
     private int roomID;
     private String roomName;
     private int capacity;
-    private String type;
-    public Rooms(int roomID, String roomName, int capacity, String type) {
+
+    public Rooms(int roomID, String roomName, int capacity) {
         this.roomID = roomID;
         this.roomName = roomName;
         this.capacity = capacity;
-        this.type = type;
+        // B: Log khi tạo đối tượng Rooms
+        System.out.println("Inside Rooms constructor - RoomID: " + this.roomID +
+                ", RoomName: " + this.roomName +
+                ", Capacity: " + this.capacity);
     }
-   public Rooms() {}
-   public Rooms(int roomID2, String name, int capacity2){}
 
-   public int getRoomID() {
-    return roomID;
-   }
+    public int getRoomID() {
+        // B: Log khi getRoomID được gọi
+        System.out.println("getRoomID called - RoomID: " + roomID);
+        return roomID;
+    }
 
-   public void setRoomID(int roomID) {
-    this.roomID = roomID;
-   }
+    public String getRoomName() {
+        // B: Log khi getRoomName được gọi
+        System.out.println("getRoomName called - RoomName: " + roomName);
+        return roomName;
+    }
 
-   public String getRoomName() {
-    return roomName;
-   }
+    public int getCapacity() {
+        return capacity;
+    }
 
-   public void setRoomName(String roomName) {
-    this.roomName = roomName;
-   }
+    public void setRoomID(int roomID) {
+        this.roomID = roomID;
+    }
 
-   public int getCapacity() {
-    return capacity;
-   }
+    public void setRoomName(String roomName) {
+        this.roomName = roomName;
+    }
 
-   public void setCapacity(int capacity) {
-    this.capacity = capacity;
-   }
-
-   public String getType() {
-    return type;
-   }
-
-   public void setType(String type) {
-    this.type = type;
-   }
-
-
+    public void setCapacity(int capacity) {
+        this.capacity = capacity;
+    }
 }
-

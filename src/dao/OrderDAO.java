@@ -1,7 +1,6 @@
 package dao;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -10,24 +9,27 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import dbs.connectDB;
 import model.Orders;
 import model.PaymentMethod;
 import model.Users;
 
 public class OrderDAO {
-    private Connection getConnection() throws SQLException {
-        String url = "jdbc:mysql://localhost:1433/databaseName=CinemaTickerManagement"; 
-        String user = "sa";
-        String password = "sapassword"; 
-        return DriverManager.getConnection(url, user, password);
+    private Connection connection;
+
+    public OrderDAO() {
+        this.connection = connectDB.getConnection();
+    }
+
+    public OrderDAO(Connection connection) {
+        this.connection = connection;
     }
 
     // Lưu đơn hàng mới
     public void saveOrder(Orders order) throws SQLException {
         String query = "INSERT INTO Orders (userID, totalPrice, orderDate, paymentMethodID) VALUES (?, ?, ?, ?)";
         
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement stmt = connection.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS)) {
             stmt.setInt(1, order.getUserID().getUserID());
             stmt.setDouble(2, order.getTotalPrice());
             stmt.setTimestamp(3, new Timestamp(order.getOrderDate().getTime()));
@@ -47,14 +49,13 @@ public class OrderDAO {
     public List<Orders> getOrdersByUser(int userID) throws SQLException {
         List<Orders> orders = new ArrayList<>();
         String query = "SELECT o.orderID, o.userID, o.totalPrice, o.orderDate, o.paymentMethodID, " +
-                      "u.userName, pm.methodName " +
+                      "u.userName, pm.paymentMethodName " +
                       "FROM Orders o " +
                       "JOIN Users u ON o.userID = u.userID " +
                       "JOIN PaymentMethods pm ON o.paymentMethodID = pm.paymentMethodID " +
                       "WHERE o.userID = ?";
 
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, userID);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -63,7 +64,7 @@ public class OrderDAO {
                     
                     Users user = new Users();
                     user.setUserID(rs.getInt("userID"));
-                    user.setUserName(rs.getString("userName")); // Giả định Users có userName
+                    user.setUserName(rs.getString("userName"));
                     order.setUserID(user);
                     
                     order.setTotalPrice(rs.getDouble("totalPrice"));
@@ -71,7 +72,7 @@ public class OrderDAO {
                     
                     PaymentMethod pm = new PaymentMethod();
                     pm.setPaymentMethodID(rs.getInt("paymentMethodID"));
-                    pm.setPaymentMethodName(rs.getString("methodName"));
+                    pm.setPaymentMethodName(rs.getString("paymentMethodName"));
                     order.setPaymentMethod(pm);
                     
                     orders.add(order);
@@ -84,14 +85,13 @@ public class OrderDAO {
     // Lấy đơn hàng theo orderID
     public Orders getOrderById(int orderID) throws SQLException {
         String query = "SELECT o.orderID, o.userID, o.totalPrice, o.orderDate, o.paymentMethodID, " +
-                      "u.userName, pm.methodName " +
+                      "u.userName, pm.paymentMethodName " +
                       "FROM Orders o " +
                       "JOIN Users u ON o.userID = u.userID " +
                       "JOIN PaymentMethods pm ON o.paymentMethodID = pm.paymentMethodID " +
                       "WHERE o.orderID = ?";
 
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, orderID);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -100,7 +100,7 @@ public class OrderDAO {
                     
                     Users user = new Users();
                     user.setUserID(rs.getInt("userID"));
-                    user.setUserName(rs.getString("userName")); // Giả định Users có userName
+                    user.setUserName(rs.getString("userName"));
                     order.setUserID(user);
                     
                     order.setTotalPrice(rs.getDouble("totalPrice"));
@@ -108,13 +108,19 @@ public class OrderDAO {
                     
                     PaymentMethod pm = new PaymentMethod();
                     pm.setPaymentMethodID(rs.getInt("paymentMethodID"));
-                    pm.setPaymentMethodName(rs.getString("methodName"));
+                    pm.setPaymentMethodName(rs.getString("paymentMethodName"));
                     order.setPaymentMethod(pm);
                     
                     return order;
                 }
             }
         }
-        return null; // Trả về null nếu không tìm thấy
+        return null;
+    }
+
+    public void closeConnection() throws SQLException {
+        if (connection != null && !connection.isClosed()) {
+            connection.close();
+        }
     }
 }

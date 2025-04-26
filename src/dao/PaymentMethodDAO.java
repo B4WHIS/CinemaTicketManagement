@@ -1,31 +1,32 @@
 package dao;
 
-import model.PaymentMethod;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PaymentMethodDAO {
+import dbs.connectDB;
+import model.PaymentMethod;
 
-    private Connection getConnection() throws SQLException {
-        String url = "jdbc:mysql://localhost:1433/databaseName=CinemaTickerManagement"; 
-        String user = "sa";
-        String password = "sapassword"; 
-        return DriverManager.getConnection(url, user, password);
+public class PaymentMethodDAO {
+    private Connection connection;
+
+    public PaymentMethodDAO() {
+        this.connection = connectDB.getConnection();
     }
 
+    public PaymentMethodDAO(Connection connection) {
+        this.connection = connection;
+    }
 
     // Lấy tất cả phương thức thanh toán
     public List<PaymentMethod> getAllPaymentMethods() throws SQLException {
         List<PaymentMethod> paymentMethods = new ArrayList<>();
         String query = "SELECT * FROM PaymentMethods";
 
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query);
+        try (PreparedStatement stmt = connection.prepareStatement(query);
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 PaymentMethod pm = new PaymentMethod();
@@ -41,8 +42,7 @@ public class PaymentMethodDAO {
     public void addPaymentMethod(PaymentMethod paymentMethod) throws SQLException {
         String query = "INSERT INTO PaymentMethods (paymentMethodName) VALUES (?)";
 
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, paymentMethod.getPaymentMethodName());
             stmt.executeUpdate();
         }
@@ -52,8 +52,7 @@ public class PaymentMethodDAO {
     public void updatePaymentMethod(PaymentMethod paymentMethod) throws SQLException {
         String query = "UPDATE PaymentMethods SET paymentMethodName = ? WHERE paymentMethodID = ?";
 
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, paymentMethod.getPaymentMethodName());
             stmt.setInt(2, paymentMethod.getPaymentMethodID());
             stmt.executeUpdate();
@@ -64,10 +63,15 @@ public class PaymentMethodDAO {
     public void deletePaymentMethod(int paymentMethodID) throws SQLException {
         String query = "DELETE FROM PaymentMethods WHERE paymentMethodID = ?";
 
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, paymentMethodID);
             stmt.executeUpdate();
+        }
+    }
+
+    public void closeConnection() throws SQLException {
+        if (connection != null && !connection.isClosed()) {
+            connection.close();
         }
     }
 }
