@@ -346,7 +346,7 @@ public class DetailFilm_GUI extends JPanel implements ActionListener{
             roomComboBox.addItem(r.getRoomID() + " - " + r.getRoomName());
         }
     }
-
+//dsadw
     private void loadShowtimes() throws SQLException {
         dateComboBox.removeAllItems();
         timeComboBox.removeAllItems();
