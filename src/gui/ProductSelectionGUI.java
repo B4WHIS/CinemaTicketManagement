@@ -12,12 +12,13 @@ import java.awt.event.ActionListener;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -97,10 +98,29 @@ public class ProductSelectionGUI extends JPanel implements ActionListener {
             productCard.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
             productCard.setPreferredSize(new Dimension(200, 300));
 
+            // Hiển thị hình ảnh sản phẩm
             JLabel imageLabel = new JLabel("", JLabel.CENTER);
             imageLabel.setOpaque(true);
             imageLabel.setBackground(Color.GRAY);
             imageLabel.setPreferredSize(new Dimension(150, 150));
+
+            // Tạo đường dẫn hình ảnh dựa trên productID
+            String imagePath = "img/product_img/" + product.getProductID() + ".jpg"; // Đường dẫn tương đối trong classpath
+            try {
+                // Tải hình ảnh từ thư mục img
+                java.net.URL imageURL = getClass().getClassLoader().getResource(imagePath);
+                if (imageURL != null) {
+                    ImageIcon imageIcon = new ImageIcon(imageURL);
+                    // Điều chỉnh kích thước hình ảnh để vừa với JLabel
+                    ImageIcon scaledIcon = new ImageIcon(imageIcon.getImage().getScaledInstance(150, 150, java.awt.Image.SCALE_SMOOTH));
+                    imageLabel.setIcon(scaledIcon);
+                } else {
+                    imageLabel.setText("Không có hình ảnh");
+                }
+            } catch (Exception ex) {
+                System.err.println("Lỗi khi tải hình ảnh cho sản phẩm " + product.getProductName() + ": " + ex.getMessage());
+                imageLabel.setText("Không có hình ảnh");
+            }
             productCard.add(imageLabel, BorderLayout.CENTER);
 
             JPanel infoPanel = new JPanel();
@@ -212,8 +232,9 @@ public class ProductSelectionGUI extends JPanel implements ActionListener {
             JOptionPane.showMessageDialog(this, product.getProductName() + " đã được thêm!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
         } else if (e.getSource() == backButton) {
             try {
+                // Quay lại Seat_GUI
                 Seat_GUI seatPanel = new Seat_GUI(room, showtimeID, ticketQuantity, ticketPrice, mainFrame);
-                mainFrame.showScreen("SeatGUI", seatPanel);
+                mainFrame.showScreen("SeatScreen", seatPanel);
             } catch (SQLException ex) {
                 JOptionPane.showMessageDialog(this, "Lỗi khi quay lại: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
@@ -236,18 +257,9 @@ public class ProductSelectionGUI extends JPanel implements ActionListener {
                 return;
             }
 
-            // Truyền thêm đối tượng Rooms vào ConfirmationGUI
-            ConfirmationGUI cs = new ConfirmationGUI(
-                mainFrame, 
-                user, 
-                showtime, 
-                cart, 
-                selectedSeats, 
-                ticketQuantity, 
-                ticketPrice,
-                room // Thêm đối tượng Rooms
-            );
-            mainFrame.showScreen("Confirmation", cs);
+            // Chuyển đến ConfirmationGUI
+            ConfirmationGUI cs = new ConfirmationGUI(mainFrame, user, showtime, cart, selectedSeats, ticketQuantity, ticketPrice, room);
+            mainFrame.showScreen("ConfirmationScreen", cs);
         }
     }
 
