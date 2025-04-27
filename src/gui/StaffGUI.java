@@ -42,14 +42,14 @@ public class StaffGUI extends JPanel {
     private JPanel centerContentPanel;
     private CardLayout centerCardLayout;
     private JScrollPane scrollPane;
-    private MainFrame mainFrame; // B: Thêm tham chiếu MainFrame
+    private MainFrame mainFrame;
 
     public StaffGUI(Connection connection, CardLayout cardLayout, JPanel mainPanel, Users user, MainFrame mainFrame) {
         this.connection = connection;
         this.cardLayout = cardLayout;
         this.mainPanel = mainPanel;
         this.user = user;
-        this.mainFrame = mainFrame; // B: Lưu MainFrame
+        this.mainFrame = mainFrame;
 
         try {
             this.movieManager = new MovieManager(connection);
@@ -67,8 +67,20 @@ public class StaffGUI extends JPanel {
         String[] menuItems = {"Trang chủ", "Lịch sử đơn hàng", "Quản lý phim"};
         for (String item : menuItems) {
             JButton btn = new JButton(item);
-            if (item.equals("Available Movies")) {
-                btn.addActionListener(e -> showMoviesPanel());
+            if (item.equals("Lịch sử đơn hàng")) {
+                btn.addActionListener(e -> {
+                    System.out.println("Mở trang Lịch sử đơn hàng");
+                    centerCardLayout.show(centerContentPanel, "OrderHistory");
+                });
+            } else if (item.equals("Trang chủ")) {
+                btn.addActionListener(e -> {
+                    System.out.println("Mở trang Trang chủ");
+                    showMoviesPanel();
+                });
+            } else if (item.equals("Quản lý phim")) {
+                btn.addActionListener(e -> {
+                    JOptionPane.showMessageDialog(this, "Chức năng Quản lý phim chỉ dành cho Admin!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                });
             }
             menuPanel.add(btn);
         }
@@ -108,13 +120,13 @@ public class StaffGUI extends JPanel {
         scrollPane.setPreferredSize(new Dimension(1000, 600));
         centerContentPanel.add(scrollPane, "Movies");
 
-        // ==== Thêm AddMoviePanel vào centerContentPanel ====
-//        addMoviePanel = new AddMoviePanel(connection, this);
-//        centerContentPanel.add(addMoviePanel, "AddMovie");
+        // ==== Thêm OrderHistoryPanel vào centerContentPanel ====
+        OrderHistoryPanel orderHistoryPanel = new OrderHistoryPanel(connection);
+        centerContentPanel.add(orderHistoryPanel, "OrderHistory");
 
         // ==== Thêm DetailFilm_GUI vào centerContentPanel ====
         try {
-            centerContentPanel.add(new DetailFilm_GUI(connection, -1, mainFrame), "MovieDetail"); // B: Truyền MainFrame
+            centerContentPanel.add(new DetailFilm_GUI(connection, -1, mainFrame), "MovieDetail");
         } catch (Exception e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, "Không thể khởi tạo trang chi tiết phim: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
@@ -249,7 +261,7 @@ public class StaffGUI extends JPanel {
                 btnBuy.setForeground(Color.WHITE);
                 btnBuy.addActionListener(e -> {
                     try {
-                        DetailFilm_GUI detailPanel = new DetailFilm_GUI(connection, movie.getMovieID(), mainFrame); // B: Truyền MainFrame
+                        DetailFilm_GUI detailPanel = new DetailFilm_GUI(connection, movie.getMovieID(), mainFrame);
                         centerContentPanel.add(detailPanel, "MovieDetail");
                         centerCardLayout.show(centerContentPanel, "MovieDetail");
                     } catch (Exception ex) {

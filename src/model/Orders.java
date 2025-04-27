@@ -1,6 +1,7 @@
 package model;
 
 import java.util.Date;
+import java.util.List;
 
 public class Orders {
     private int orderID;
@@ -8,10 +9,17 @@ public class Orders {
     private double totalAmount;
     private Date orderDate;
     private PaymentMethod paymentMethod;
+    private String movieTitle; // Thêm để lưu tên phim
+    private String showtimeStartTime; // Thêm để lưu suất chiếu
+    private String roomName; // Thêm để lưu tên phòng chiếu
+    private List<Seats> seats; // Thêm để lưu danh sách ghế
+    private List<Product_Orders> productOrders; // Thêm để lưu danh sách món ăn
 
     public Orders() {
     }
-
+    public Orders(int orderID) {
+    	this.orderID = orderID;
+    }
     public Orders(int orderID, Users userID, double totalAmount, Date orderDate, PaymentMethod paymentMethod) {
         this.orderID = orderID;
         this.userID = userID;
@@ -20,6 +28,7 @@ public class Orders {
         this.paymentMethod = paymentMethod;
     }
 
+    // Getters và Setters
     public int getOrderID() {
         return orderID;
     }
@@ -58,5 +67,45 @@ public class Orders {
 
     public void setPaymentMethod(PaymentMethod paymentMethod) {
         this.paymentMethod = paymentMethod;
+    }
+
+    public String getMovieTitle() {
+        return movieTitle;
+    }
+
+    public void setMovieTitle(String movieTitle) {
+        this.movieTitle = movieTitle;
+    }
+
+    public String getShowtimeStartTime() {
+        return showtimeStartTime;
+    }
+
+    public void setShowtimeStartTime(String showtimeStartTime) {
+        this.showtimeStartTime = showtimeStartTime;
+    }
+
+    public String getRoomName() {
+        return roomName;
+    }
+
+    public void setRoomName(String roomName) {
+        this.roomName = roomName;
+    }
+
+    public List<Seats> getSeats() {
+        return seats;
+    }
+
+    public void setSeats(List<Seats> seats) {
+        this.seats = seats;
+    }
+
+    public List<Product_Orders> getProductOrders() {
+        return productOrders;
+    }
+
+    public void setProductOrders(List<Product_Orders> productOrders) {
+        this.productOrders = productOrders;
     }
 }

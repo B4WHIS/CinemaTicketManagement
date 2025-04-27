@@ -15,7 +15,9 @@ public class Users {
 	public Users() {
 		
 	}
-
+	public Users(int userID) {
+        this.userID = userID;
+    }
 	public Users(int userID, String fullName, String userName, String passwordHash, String email,
 			LocalDateTime hireDate, boolean available, int roleID) {
 		this.userID = userID;
