@@ -24,7 +24,6 @@ public class ProductDAO {
     // Lấy tất cả sản phẩm
     public List<Products> getAllProducts() throws SQLException {
         List<Products> products = new ArrayList<>();
-        // B: Sửa truy vấn SQL để không lấy cột 'type' không tồn tại
         String query = "SELECT productID, productName, price, image FROM Products";
 
         try (PreparedStatement stmt = connection.prepareStatement(query);
@@ -34,9 +33,7 @@ public class ProductDAO {
                 product.setProductID(rs.getInt("productID"));
                 product.setProductName(rs.getString("productName"));
                 product.setPrice(rs.getDouble("price"));
-                // B: Xóa dòng setType vì cột 'type' không tồn tại
-                // product.setType(rs.getString("type"));
-                product.setImage(rs.getBytes("image"));
+                product.setImage(rs.getString("image")); // Lấy đường dẫn hình ảnh dưới dạng String
                 products.add(product);
             }
         }
@@ -45,7 +42,6 @@ public class ProductDAO {
 
     // Lấy sản phẩm theo ID
     public Products getProductById(int id) throws SQLException {
-        // B: Sửa truy vấn SQL để không lấy cột 'type' không tồn tại
         String query = "SELECT productID, productName, price, image FROM Products WHERE productID = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
@@ -56,9 +52,7 @@ public class ProductDAO {
                     product.setProductID(rs.getInt("productID"));
                     product.setProductName(rs.getString("productName"));
                     product.setPrice(rs.getDouble("price"));
-                    // B: Xóa dòng setType vì cột 'type' không tồn tại
-                    // product.setType(rs.getString("type"));
-                    product.setImage(rs.getBytes("image"));
+                    product.setImage(rs.getString("image")); // Lấy đường dẫn hình ảnh dưới dạng String
                     return product;
                 }
             }
@@ -68,30 +62,24 @@ public class ProductDAO {
 
     // Thêm sản phẩm mới
     public void addProduct(Products product) throws SQLException {
-        // B: Sửa truy vấn SQL để không thêm cột 'type' không tồn tại
         String query = "INSERT INTO Products (productName, price, image) VALUES (?, ?, ?)";
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, product.getProductName());
             stmt.setDouble(2, product.getPrice());
-            // B: Xóa dòng set giá trị cho cột 'type'
-            // stmt.setString(3, product.getType());
-            stmt.setBytes(3, product.getImage());
+            stmt.setString(3, product.getImage()); // Lưu đường dẫn hình ảnh dưới dạng String
             stmt.executeUpdate();
         }
     }
 
     // Cập nhật sản phẩm
     public void updateProduct(Products product) throws SQLException {
-        // B: Sửa truy vấn SQL để không cập nhật cột 'type' không tồn tại
         String query = "UPDATE Products SET productName = ?, price = ?, image = ? WHERE productID = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, product.getProductName());
             stmt.setDouble(2, product.getPrice());
-            // B: Xóa dòng set giá trị cho cột 'type'
-            // stmt.setString(3, product.getType());
-            stmt.setBytes(3, product.getImage());
+            stmt.setString(3, product.getImage()); // Cập nhật đường dẫn hình ảnh dưới dạng String
             stmt.setInt(4, product.getProductID());
             stmt.executeUpdate();
         }

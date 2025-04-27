@@ -11,6 +11,8 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.math.BigDecimal;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,6 +24,8 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import model.Orders;
 import model.Product_Orders;
 import model.Products;
@@ -50,9 +54,8 @@ public class ConfirmationGUI extends JPanel {
     private JButton btnConfirm;
     private JButton btnBack;
 
-    // Sửa tên constructor từ public_RANGE_SCREEN thành ConfirmationGUI
     public ConfirmationGUI(MainFrame mainFrame, Users user, Showtimes showtime, List<Product_Orders> cart,
-                              List<Seats> selectedSeats, int ticketQuantity, BigDecimal ticketPrice, Rooms room) {
+                           List<Seats> selectedSeats, int ticketQuantity, BigDecimal ticketPrice, Rooms room) {
         this.mainFrame = mainFrame;
         this.user = user;
         this.showtime = showtime;
@@ -65,13 +68,21 @@ public class ConfirmationGUI extends JPanel {
         // Lấy thông tin sản phẩm cho từng mục trong cart
         loadProductDetails();
 
-        setPreferredSize(new Dimension(400, 300));
+        // Thiết lập giao diện
+        initializeUI();
+
+        // Gán sự kiện cho các nút
+        setupButtonListeners();
+    }
+
+    private void initializeUI() {
+        setPreferredSize(new Dimension(700, 600));
         setLayout(new BorderLayout());
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         // Thêm tiêu đề
         JLabel titleLabel = new JLabel("Xác nhận đặt vé", SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Times New Roman", Font.BOLD, 18));
+        titleLabel.setFont(new Font("Times New Roman", Font.BOLD, 30));
         titleLabel.setBorder(BorderFactory.createEmptyBorder(5, 0, 10, 0));
         add(titleLabel, BorderLayout.NORTH);
 
@@ -94,13 +105,11 @@ public class ConfirmationGUI extends JPanel {
         btnBack.setBackground(Color.RED);
         btnBack.setForeground(Color.WHITE);
         btnBack.setFont(new Font("Times New Roman", Font.PLAIN, 14));
-        btnBack.addActionListener(e -> mainFrame.showScreen("SeatScreen", null));
 
         btnConfirm = new JButton("Xác nhận");
         btnConfirm.setBackground(Color.GREEN);
         btnConfirm.setForeground(Color.WHITE);
         btnConfirm.setFont(new Font("Times New Roman", Font.PLAIN, 14));
-        btnConfirm.addActionListener(e -> confirmBooking());
 
         buttonPanel.add(btnBack);
         buttonPanel.add(btnConfirm);
@@ -120,6 +129,116 @@ public class ConfirmationGUI extends JPanel {
         infoPanel.add(buttonPanel);
 
         add(infoPanel, BorderLayout.CENTER);
+    }
+
+    private void setupButtonListeners() {
+        btnBack.addActionListener(new BackButtonListener());
+        btnConfirm.addActionListener(new ConfirmButtonListener());
+    }
+
+    // ActionListener cho nút "Trở về"
+    private class BackButtonListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            // Quay lại ProductSelectionGUI
+            ProductSelectionGUI pss = new ProductSelectionGUI(mainFrame, showtime.getShowTimeID(), ticketQuantity, ticketPrice, selectedSeats, room);
+            mainFrame.showScreen("ProductSelection", pss);
+        }
+    }
+
+    // ActionListener cho nút "Xác nhận"
+    private class ConfirmButtonListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (selectedSeats.size() != ticketQuantity) {
+                JOptionPane.showMessageDialog(ConfirmationGUI.this, "Số lượng ghế (" + selectedSeats.size() + ") không khớp với số lượng vé (" + ticketQuantity + ")!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            Orders order = new Orders();
+            order.setUserID(user);
+            order.setTotalAmount(calculateTotalAmount());
+            order.setOrderDate(new java.util.Date());
+            order.setPaymentMethod(new model.PaymentMethod(1, "Cash"));
+
+            Connection conn = mainFrame.getConnection();
+            try {
+                conn.setAutoCommit(false);
+
+                OrderDAO orderDAO = new OrderDAO(conn);
+                orderDAO.saveOrder(order);
+                if (order.getOrderID() <= 0) {
+                    throw new SQLException("orderID không hợp lệ sau khi lưu đơn hàng: " + order.getOrderID());
+                }
+                System.out.println("Order saved with orderID: " + order.getOrderID());
+
+             // Lưu Product_Orders trực tiếp
+                if (!cart.isEmpty()) {
+                    // Lấy ProductOrderID lớn nhất hiện có và tăng lên 1
+                    int nextProductOrderID;
+                    try (PreparedStatement ps = conn.prepareStatement("SELECT MAX(ProductOrderID) FROM Product_Orders");
+                         ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) {
+                            nextProductOrderID = rs.getInt(1) + 1; // Tăng ProductOrderID lên 1
+                        } else {
+                            nextProductOrderID = 1; // Nếu bảng rỗng, bắt đầu từ 1
+                        }
+                    }
+
+                    // Lưu trực tiếp vào bảng Product_Orders
+                    String query = "INSERT INTO Product_Orders (ProductOrderID, orderID, productID, quantity, price) VALUES (?, ?, ?, ?, ?)";
+                    try (PreparedStatement ps = conn.prepareStatement(query)) {
+                        for (Product_Orders po : cart) {
+                            po.setOrderID(order);
+                            ps.setInt(1, nextProductOrderID++); // Gán ProductOrderID và tăng lên cho bản ghi tiếp theo
+                            ps.setInt(2, po.getOrderID().getOrderID());
+                            ps.setInt(3, po.getProductID());
+                            ps.setInt(4, po.getQuantity());
+                            ps.setDouble(5, po.getTotalPrice()); // Sử dụng price thay vì TotalPrice
+                            ps.executeUpdate();
+                        }
+                    }
+                }
+                TicketDAO ticketDAO = new TicketDAO(conn);
+                for (int i = 0; i < ticketQuantity; i++) {
+                    Tickets ticket = new Tickets();
+                    Showtimes showtimeObj = new Showtimes();
+                    showtimeObj.setShowTimeID(showtime.getShowTimeID());
+                    ticket.setShowTimeID(showtimeObj);
+                    ticket.setSaleDate(LocalDateTime.now());
+                    ticket.setOrderID(order);
+                    ticket.setPrice(ticketPrice.doubleValue());
+                    ticket.setSeatID(selectedSeats.get(i));
+                    System.out.println("Saving ticket with orderID: " + order.getOrderID());
+                    ticketDAO.saveTicket(ticket);
+                }
+
+                conn.commit();
+                JOptionPane.showMessageDialog(ConfirmationGUI.this, "Đặt vé thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                mainFrame.clearCart();
+
+                // Chuyển về màn hình chính (MainGUI hoặc MainGUI2 dựa trên roleID của user)
+                if (user.getRoleID() == 1) {
+                    mainFrame.showMainGUI2(); // AdminGUI
+                } else {
+                    mainFrame.showMainGUI(); // StaffGUI
+                }
+            } catch (SQLException ex) {
+                try {
+                    conn.rollback();
+                } catch (SQLException rollbackEx) {
+                    rollbackEx.printStackTrace();
+                }
+                JOptionPane.showMessageDialog(ConfirmationGUI.this, "Lỗi khi lưu đơn hàng: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            } finally {
+                try {
+                    conn.setAutoCommit(true);
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
     }
 
     private void loadProductDetails() {
@@ -173,68 +292,5 @@ public class ConfirmationGUI extends JPanel {
 
     private String getFormattedTotalAmount() {
         return String.format("%,.2f", calculateTotalAmount());
-    }
-
-    private void confirmBooking() {
-        if (selectedSeats.size() != ticketQuantity) {
-            JOptionPane.showMessageDialog(this, "Số lượng ghế (" + selectedSeats.size() + ") không khớp với số lượng vé (" + ticketQuantity + ")!", "Lỗi", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        Orders order = new Orders();
-        order.setUserID(user);
-        order.setTotalAmount(calculateTotalAmount());
-        order.setOrderDate(new java.util.Date());
-        order.setPaymentMethod(new model.PaymentMethod(1, "Cash"));
-
-        Connection conn = mainFrame.getConnection();
-        try {
-            conn.setAutoCommit(false);
-
-            OrderDAO orderDAO = new OrderDAO(conn);
-            orderDAO.saveOrder(order);
-            if (order.getOrderID() <= 0) {
-                throw new SQLException("orderID không hợp lệ sau khi lưu đơn hàng: " + order.getOrderID());
-            }
-            System.out.println("Order saved with orderID: " + order.getOrderID());
-
-            ProductOrderDAO productOrderDAO = new ProductOrderDAO(conn);
-            for (Product_Orders po : cart) {
-                po.setOrderID(order);
-                productOrderDAO.saveProductOrder(po);
-            }
-
-            TicketDAO ticketDAO = new TicketDAO(conn);
-            for (int i = 0; i < ticketQuantity; i++) {
-                Tickets ticket = new Tickets();
-                Showtimes showtimeObj = new Showtimes();
-                showtimeObj.setShowTimeID(showtime.getShowTimeID());
-                ticket.setShowTimeID(showtimeObj);
-                ticket.setSaleDate(LocalDateTime.now());
-                ticket.setOrderID(order);
-                ticket.setPrice(ticketPrice.doubleValue());
-                ticket.setSeatID(selectedSeats.get(i));
-                System.out.println("Saving ticket with orderID: " + order.getOrderID());
-                ticketDAO.saveTicket(ticket);
-            }
-
-            conn.commit();
-            JOptionPane.showMessageDialog(this, "Đặt vé thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
-            mainFrame.showScreen("MainScreen", null);
-        } catch (SQLException e) {
-            try {
-                conn.rollback();
-            } catch (SQLException rollbackEx) {
-                rollbackEx.printStackTrace();
-            }
-            JOptionPane.showMessageDialog(this, "Lỗi khi lưu đơn hàng: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
-        } finally {
-            try {
-                conn.setAutoCommit(true);
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
     }
 }

@@ -26,43 +26,43 @@ public class OrderDAO {
     }
 
     public void saveOrder(Orders order) throws SQLException {
-        // Bắt đầu giao dịch để tránh xung đột đa luồng
+        // Bắt đầu giao dịch
         boolean autoCommit = connection.getAutoCommit();
         connection.setAutoCommit(false);
         try {
-            // Lấy OrderID lớn nhất hiện tại từ bảng Orders
-            int newOrderID = 1;
-            String getMaxIDSql = "SELECT MAX(OrderID) FROM Orders WITH (UPDLOCK, HOLDLOCK)"; // Sửa Orders_Old thành Orders
-            try (PreparedStatement pstmt = connection.prepareStatement(getMaxIDSql);
-                 ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
-                    newOrderID = rs.getInt(1) + 1;
+            // Chèn bản ghi mà không bao gồm OrderID (vì nó là cột identity)
+            String sql = "INSERT INTO Orders (UserID, TotalAmount, OrderDate, PaymentMethodID) VALUES (?, ?, ?, ?)";
+            try (PreparedStatement pstmt = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+                pstmt.setInt(1, order.getUserID().getUserID());
+                pstmt.setDouble(2, order.getTotalAmount());
+                pstmt.setTimestamp(3, new Timestamp(order.getOrderDate().getTime()));
+                pstmt.setInt(4, order.getPaymentMethod().getPaymentMethodID());
+                int rowsAffected = pstmt.executeUpdate();
+
+                if (rowsAffected == 0) {
+                    throw new SQLException("Không thể chèn bản ghi vào bảng Orders.");
+                }
+
+                // Lấy OrderID vừa tạo
+                try (ResultSet rs = pstmt.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        int generatedOrderID = rs.getInt(1);
+                        order.setOrderID(generatedOrderID);
+                    } else {
+                        throw new SQLException("Không thể lấy OrderID sau khi chèn bản ghi.");
+                    }
                 }
             }
-    
-            // Gán OrderID cho đối tượng
-            order.setOrderID(newOrderID);
-    
-            // Chèn bản ghi với OrderID vào bảng Orders
-            String sql = "INSERT INTO Orders (OrderID, UserID, TotalAmount, OrderDate, PaymentMethodID) VALUES (?, ?, ?, ?, ?)"; // Sửa Orders_Old thành Orders
-            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-                pstmt.setInt(1, order.getOrderID());
-                pstmt.setInt(2, order.getUserID().getUserID());
-                pstmt.setDouble(3, order.getTotalAmount());
-                pstmt.setTimestamp(4, new Timestamp(order.getOrderDate().getTime()));
-                pstmt.setInt(5, order.getPaymentMethod().getPaymentMethodID());
-                pstmt.executeUpdate();
-            }
-    
+
             // Commit giao dịch
             connection.commit();
         } catch (SQLException e) {
             // Rollback nếu có lỗi
-            connection.rollback();
+        	connection.rollback();
             throw new SQLException("Lỗi khi lưu Order: " + e.getMessage(), e);
         } finally {
             // Khôi phục trạng thái autoCommit
-            connection.setAutoCommit(autoCommit);
+        	connection.setAutoCommit(autoCommit);
         }
     }
 
