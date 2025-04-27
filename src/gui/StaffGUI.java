@@ -51,6 +51,23 @@ public class StaffGUI extends JPanel {
         this.user = user;
         this.mainFrame = mainFrame;
 
+        // Thêm log để kiểm tra user
+        System.out.println("User object in StaffGUI: " + (user != null ? user.toString() : "null"));
+        if (user != null) {
+            System.out.println("User FullName in StaffGUI: " + user.getFullName());
+        }
+
+        // Kiểm tra các tham số đầu vào
+        if (connection == null) {
+            JOptionPane.showMessageDialog(this, "Kết nối cơ sở dữ liệu không khả dụng.", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        if (user == null) {
+            JOptionPane.showMessageDialog(this, "Thông tin người dùng không khả dụng.", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Khởi tạo MovieManager
         try {
             this.movieManager = new MovieManager(connection);
         } catch (SQLException e) {
@@ -70,7 +87,9 @@ public class StaffGUI extends JPanel {
             if (item.equals("Lịch sử đơn hàng")) {
                 btn.addActionListener(e -> {
                     System.out.println("Mở trang Lịch sử đơn hàng");
-                    centerCardLayout.show(centerContentPanel, "OrderHistory");
+                    if (centerContentPanel != null && centerCardLayout != null) {
+                        centerCardLayout.show(centerContentPanel, "OrderHistory");
+                    }
                 });
             } else if (item.equals("Trang chủ")) {
                 btn.addActionListener(e -> {
@@ -121,8 +140,14 @@ public class StaffGUI extends JPanel {
         centerContentPanel.add(scrollPane, "Movies");
 
         // ==== Thêm OrderHistoryPanel vào centerContentPanel ====
-        OrderHistoryPanel orderHistoryPanel = new OrderHistoryPanel(connection);
-        centerContentPanel.add(orderHistoryPanel, "OrderHistory");
+        OrderHistoryPanel orderHistoryPanel = null;
+        try {
+            orderHistoryPanel = new OrderHistoryPanel(connection);
+            centerContentPanel.add(orderHistoryPanel, "OrderHistory");
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Không thể khởi tạo OrderHistoryPanel: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
 
         // ==== Thêm DetailFilm_GUI vào centerContentPanel ====
         try {
@@ -137,27 +162,20 @@ public class StaffGUI extends JPanel {
         // ==== Sidebar ====
         JPanel sidebar = new JPanel();
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
-        sidebar.setPreferredSize(new Dimension(200, 600));
+        sidebar.setPreferredSize(new Dimension(250, 600));
         sidebar.setBorder(BorderFactory.createEmptyBorder(20, 10, 10, 10));
 
-        JLabel welcomeLabel = new JLabel("👋 Welcome", SwingConstants.CENTER);
+        // Khai báo displayName, chỉ lấy fullName
+        String displayName = "Khách"; // Giá trị mặc định nếu không có thông tin
+        if (user != null && user.getFullName() != null && !user.getFullName().isEmpty()) {
+            displayName = user.getFullName();
+        }
+
+        // Nhãn chào mừng với displayName
+        JLabel welcomeLabel = new JLabel("<html>Welcome " + displayName + "</html>", SwingConstants.CENTER);
         welcomeLabel.setFont(new Font("Arial", Font.BOLD, 16));
 
-        JLabel avatar = new JLabel();
-        avatar.setPreferredSize(new Dimension(100, 100));
-        avatar.setMaximumSize(new Dimension(100, 100));
-        avatar.setOpaque(true);
-        avatar.setBackground(Color.GRAY);
-        avatar.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        JLabel nameLabel = new JLabel(user.getUserName(), SwingConstants.CENTER);
-        nameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
         sidebar.add(welcomeLabel);
-        sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
-        sidebar.add(avatar);
-        sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
-        sidebar.add(nameLabel);
 
         centerPanel.add(sidebar, BorderLayout.EAST);
 
@@ -171,127 +189,135 @@ public class StaffGUI extends JPanel {
 
     public void showMoviesPanel() {
         System.out.println("Showing Movies panel");
-        System.out.println("centerContentPanel component count: " + centerContentPanel.getComponentCount());
-        centerCardLayout.show(centerContentPanel, "Movies");
-        loadMovies("");
+        if (centerContentPanel != null && centerCardLayout != null) {
+            System.out.println("centerContentPanel component count: " + centerContentPanel.getComponentCount());
+            centerCardLayout.show(centerContentPanel, "Movies");
+            loadMovies("");
+        } else {
+            System.err.println("centerContentPanel or centerCardLayout is null");
+        }
     }
 
     public void loadMovies(String keyword) {
+        if (moviesPanel == null) {
+            System.err.println("moviesPanel is null");
+            return;
+        }
+
         moviesPanel.removeAll();
         try {
             List<Movies> movies = movieManager.getAllMovies();
-            System.out.println("Number of movies loaded: " + movies.size());
-            if (movies.isEmpty()) {
+            System.out.println("Number of movies loaded: " + (movies != null ? movies.size() : 0));
+            if (movies == null || movies.isEmpty()) {
                 System.out.println("No movies found in the database.");
                 JOptionPane.showMessageDialog(this, "Không có phim nào trong cơ sở dữ liệu.", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-            }
+            } else {
+                boolean foundMovies = false;
+                GridBagConstraints gbc = new GridBagConstraints();
+                gbc.insets = new java.awt.Insets(10, 10, 10, 10);
+                gbc.anchor = GridBagConstraints.NORTHWEST;
+                int columnCount = 0;
+                int rowCount = 0;
 
-            boolean foundMovies = false;
-            GridBagConstraints gbc = new GridBagConstraints();
-            gbc.insets = new java.awt.Insets(10, 10, 10, 10);
-            gbc.anchor = GridBagConstraints.NORTHWEST;
-            int columnCount = 0;
-            int rowCount = 0;
+                for (Movies movie : movies) {
+                    if (movie.getMovieID() == 0) {
+                        System.out.println("Skipping movie with MovieID 0");
+                        continue;
+                    }
 
-            for (Movies movie : movies) {
-                if (movie.getMovieID() == 0) {
-                    System.out.println("Skipping movie with MovieID 0");
-                    continue;
-                }
+                    if (!keyword.isEmpty() && !movie.getTitle().toLowerCase().contains(keyword.toLowerCase())) {
+                        continue;
+                    }
 
-                if (!keyword.isEmpty() && !movie.getTitle().toLowerCase().contains(keyword.toLowerCase())) {
-                    continue;
-                }
+                    foundMovies = true;
 
-                foundMovies = true;
+                    JPanel movieCard = new JPanel(new BorderLayout());
+                    movieCard.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+                    movieCard.setPreferredSize(new Dimension(200, 350));
 
-                JPanel movieCard = new JPanel(new BorderLayout());
-                movieCard.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-                movieCard.setPreferredSize(new Dimension(200, 350));
+                    JLabel img = new JLabel();
+                    img.setPreferredSize(new Dimension(200, 300));
+                    img.setHorizontalAlignment(SwingConstants.CENTER);
 
-                JLabel img = new JLabel();
-                img.setPreferredSize(new Dimension(200, 300));
-                img.setHorizontalAlignment(SwingConstants.CENTER);
+                    String imagePath = movie.getImage();
+                    System.out.println("Original image path from database for MovieID " + movie.getMovieID() + ": " + imagePath);
 
-                String imagePath = movie.getImage();
-                System.out.println("Original image path from database for MovieID " + movie.getMovieID() + ": " + imagePath);
+                    if (imagePath != null && !imagePath.isEmpty()) {
+                        try {
+                            String resourcePath = "/img/movies/" + imagePath.substring(imagePath.lastIndexOf("/") + 1);
+                            System.out.println("Resource path for getResource: " + resourcePath);
 
-                if (imagePath != null && !imagePath.isEmpty()) {
-                    try {
-                        String resourcePath = "/img/movies/" + imagePath.substring(imagePath.lastIndexOf("/") + 1);
-                        System.out.println("Resource path for getResource: " + resourcePath);
-
-                        java.net.URL resourceURL = getClass().getResource(resourcePath);
-                        if (resourceURL == null) {
-                            System.err.println("Resource not found in classpath: " + resourcePath);
-                            img.setText(movie.getTitle());
-                            img.setOpaque(true);
-                            img.setBackground(Color.LIGHT_GRAY);
-                            img.setFont(new Font("Arial", Font.PLAIN, 14));
-                        } else {
-                            ImageIcon icon = new ImageIcon(resourceURL);
-                            if (icon.getIconWidth() == -1) {
-                                System.err.println("Failed to load image as resource: " + resourcePath);
+                            java.net.URL resourceURL = getClass().getResource(resourcePath);
+                            if (resourceURL == null) {
+                                System.err.println("Resource not found in classpath: " + resourcePath);
                                 img.setText(movie.getTitle());
                                 img.setOpaque(true);
                                 img.setBackground(Color.LIGHT_GRAY);
                                 img.setFont(new Font("Arial", Font.PLAIN, 14));
                             } else {
-                                Image scaledImage = icon.getImage().getScaledInstance(200, 300, Image.SCALE_SMOOTH);
-                                img.setIcon(new ImageIcon(scaledImage));
+                                ImageIcon icon = new ImageIcon(resourceURL);
+                                if (icon.getIconWidth() == -1) {
+                                    System.err.println("Failed to load image as resource: " + resourcePath);
+                                    img.setText(movie.getTitle());
+                                    img.setOpaque(true);
+                                    img.setBackground(Color.LIGHT_GRAY);
+                                    img.setFont(new Font("Arial", Font.PLAIN, 14));
+                                } else {
+                                    Image scaledImage = icon.getImage().getScaledInstance(200, 300, Image.SCALE_SMOOTH);
+                                    img.setIcon(new ImageIcon(scaledImage));
+                                }
                             }
+                        } catch (Exception e) {
+                            System.err.println("Error loading image for MovieID " + movie.getMovieID() + ": " + e.getMessage());
+                            img.setText(movie.getTitle());
+                            img.setOpaque(true);
+                            img.setBackground(Color.LIGHT_GRAY);
+                            img.setFont(new Font("Arial", Font.PLAIN, 14));
                         }
-                    } catch (Exception e) {
-                        System.err.println("Error loading image for MovieID " + movie.getMovieID() + ": " + e.getMessage());
+                    } else {
+                        System.out.println("No image for movie: " + movie.getTitle());
                         img.setText(movie.getTitle());
                         img.setOpaque(true);
                         img.setBackground(Color.LIGHT_GRAY);
                         img.setFont(new Font("Arial", Font.PLAIN, 14));
                     }
-                } else {
-                    System.out.println("No image for movie: " + movie.getTitle());
-                    img.setText(movie.getTitle());
-                    img.setOpaque(true);
-                    img.setBackground(Color.LIGHT_GRAY);
-                    img.setFont(new Font("Arial", Font.PLAIN, 14));
-                }
 
-                JButton btnBuy = new JButton("Đặt vé");
-                btnBuy.setBackground(new Color(0, 102, 204));
-                btnBuy.setForeground(Color.WHITE);
-                btnBuy.addActionListener(e -> {
-                    try {
-                        DetailFilm_GUI detailPanel = new DetailFilm_GUI(connection, movie.getMovieID(), mainFrame);
-                        centerContentPanel.add(detailPanel, "MovieDetail");
-                        centerCardLayout.show(centerContentPanel, "MovieDetail");
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                        JOptionPane.showMessageDialog(this, "Không thể hiển thị chi tiết phim: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    JButton btnBuy = new JButton("Đặt vé");
+                    btnBuy.setBackground(new Color(0, 102, 204));
+                    btnBuy.setForeground(Color.WHITE);
+                    btnBuy.addActionListener(e -> {
+                        try {
+                            DetailFilm_GUI detailPanel = new DetailFilm_GUI(connection, movie.getMovieID(), mainFrame);
+                            centerContentPanel.add(detailPanel, "MovieDetail");
+                            centerCardLayout.show(centerContentPanel, "MovieDetail");
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                            JOptionPane.showMessageDialog(this, "Không thể hiển thị chi tiết phim: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                        }
+                    });
+
+                    movieCard.add(img, BorderLayout.CENTER);
+                    movieCard.add(btnBuy, BorderLayout.SOUTH);
+
+                    gbc.gridx = columnCount;
+                    gbc.gridy = rowCount;
+                    moviesPanel.add(movieCard, gbc);
+
+                    columnCount++;
+                    if (columnCount >= 4) {
+                        columnCount = 0;
+                        rowCount++;
                     }
-                });
 
-                movieCard.add(img, BorderLayout.CENTER);
-                movieCard.add(btnBuy, BorderLayout.SOUTH);
-
-                gbc.gridx = columnCount;
-                gbc.gridy = rowCount;
-                moviesPanel.add(movieCard, gbc);
-
-                columnCount++;
-                if (columnCount >= 4) {
-                    columnCount = 0;
-                    rowCount++;
+                    System.out.println("Added movie card for: " + movie.getTitle() + " (MovieID: " + movie.getMovieID() + ")");
                 }
 
-                System.out.println("Added movie card for: " + movie.getTitle() + " (MovieID: " + movie.getMovieID() + ")");
+                if (!foundMovies && !keyword.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "Không tìm thấy phim nào phù hợp với từ khóa: " + keyword, "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                    loadMovies("");
+                    searchField.setText("");
+                }
             }
-
-            if (!foundMovies && !keyword.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Không tìm thấy phim nào phù hợp với từ khóa: " + keyword, "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-                loadMovies("");
-                searchField.setText("");
-            }
-
         } catch (SQLException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, "Không thể tải danh sách phim: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
@@ -299,11 +325,15 @@ public class StaffGUI extends JPanel {
 
         moviesPanel.revalidate();
         moviesPanel.repaint();
-        scrollPane.revalidate();
-        scrollPane.repaint();
-        scrollPane.getVerticalScrollBar().setValue(0);
-        centerContentPanel.revalidate();
-        centerContentPanel.repaint();
+        if (scrollPane != null) {
+            scrollPane.revalidate();
+            scrollPane.repaint();
+            scrollPane.getVerticalScrollBar().setValue(0);
+        }
+        if (centerContentPanel != null) {
+            centerContentPanel.revalidate();
+            centerContentPanel.repaint();
+        }
         revalidate();
         repaint();
     }

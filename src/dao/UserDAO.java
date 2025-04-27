@@ -1,13 +1,11 @@
 package dao;
 
-import dbs.connectDB;
 import java.sql.CallableStatement;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
+
+import dbs.connectDB;
 import model.Users;
 
 public class UserDAO {
@@ -27,47 +25,6 @@ public class UserDAO {
         }
     }
 
-    // Thêm người dùng mới
-    public void addUser(Users user) throws SQLException {
-        ensureConnection();
-        String query = "INSERT INTO Users (username, password, roleID) VALUES (?, ?, ?)";
-        try (PreparedStatement stmt = con.prepareStatement(query)) {
-            stmt.setString(1, user.getUserName());
-            stmt.setString(2, user.getPasswordHash());
-            stmt.setInt(3, user.getRoleID());
-            stmt.executeUpdate();
-        }
-    }
-
-    // Lấy tất cả người dùng
-    public List<Users> getAllUsers() throws SQLException {
-        ensureConnection();
-        List<Users> users = new ArrayList<>();
-        String query = "SELECT * FROM Users";
-        try (PreparedStatement stmt = con.prepareStatement(query);
-             ResultSet rs = stmt.executeQuery()) {
-            while (rs.next()) {
-                users.add(createUserFromResultSet(rs));
-            }
-        }
-        return users;
-    }
-
-    // Lấy người dùng theo ID
-    public Users getUserById(int userID) throws SQLException {
-        ensureConnection();
-        String query = "SELECT * FROM Users WHERE userID = ?";
-        try (PreparedStatement stmt = con.prepareStatement(query)) {
-            stmt.setInt(1, userID);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return createUserFromResultSet(rs);
-                }
-            }
-        }
-        return null;
-    }
-
     // Đăng nhập người dùng (gọi stored procedure sp_LoginUser)
     public Users loginUser(String username, String password) throws SQLException {
         ensureConnection();
@@ -80,33 +37,18 @@ public class UserDAO {
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     user = createUserFromResultSet(rs);
+                    // Log để kiểm tra giá trị fullName
+                    System.out.println("User FullName from DB in UserDAO: " + user.getFullName());
+                    System.out.println("User UserName from DB in UserDAO: " + user.getUserName());
+                } else {
+                    System.out.println("No user found for username in UserDAO: " + username);
                 }
             }
+        } catch (SQLException e) {
+            System.err.println("Error in loginUser: " + e.getMessage());
+            throw e;
         }
         return user;
-    }
-
-    // Cập nhật người dùng
-    public void updateUser(Users user) throws SQLException {
-        ensureConnection();
-        String query = "UPDATE Users SET username = ?, password = ?, roleID = ? WHERE userID = ?";
-        try (PreparedStatement stmt = con.prepareStatement(query)) {
-            stmt.setString(1, user.getUserName());
-            stmt.setString(2, user.getPasswordHash());
-            stmt.setInt(3, user.getRoleID());
-            stmt.setInt(4, user.getUserID());
-            stmt.executeUpdate();
-        }
-    }
-
-    // Xóa người dùng
-    public void deleteUser(int userID) throws SQLException {
-        ensureConnection();
-        String query = "DELETE FROM Users WHERE userID = ?";
-        try (PreparedStatement stmt = con.prepareStatement(query)) {
-            stmt.setInt(1, userID);
-            stmt.executeUpdate();
-        }
     }
 
     // Helper method to create User object from ResultSet
@@ -114,15 +56,11 @@ public class UserDAO {
         Users user = new Users();
         user.setUserID(rs.getInt("userID"));
         user.setUserName(rs.getString("username"));
-        user.setPasswordHash(rs.getString("password")); // Lưu ý: Đảm bảo cột trong DB là passwordHash
+        String fullName = rs.getString("fullName"); // Sửa từ FULLNAME thành fullName (viết thường)
+        System.out.println("FullName directly from ResultSet in UserDAO: " + fullName); // Log kiểm tra
+        user.setFullName(fullName);
+        user.setPasswordHash(rs.getString("passwordHash"));
         user.setRoleID(rs.getInt("roleID"));
         return user;
-    }
-
-    // Đóng kết nối
-    public void closeConnection() throws SQLException {
-        if (con != null && !con.isClosed()) {
-            con.close();
-        }
     }
 }
