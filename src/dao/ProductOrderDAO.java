@@ -25,43 +25,48 @@ public class ProductOrderDAO {
 
     // Lưu chi tiết đơn hàng mới
     public void saveProductOrder(Product_Orders productOrder) throws SQLException {
-        // Bắt đầu giao dịch
         boolean autoCommit = connection.getAutoCommit();
         connection.setAutoCommit(false);
         try {
-            // Chèn bản ghi mà không bao gồm ProductOrderID (vì nó là cột identity)
-            String sql = "INSERT INTO ProductOrders (OrderID, ProductID, Quantity, TotalPrice) VALUES (?, ?, ?, ?)";
-            try (PreparedStatement pstmt = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
-                pstmt.setInt(1, productOrder.getOrderID().getOrderID());
-                pstmt.setInt(2, productOrder.getProductID());
-                pstmt.setInt(3, productOrder.getQuantity());
-                pstmt.setDouble(4, productOrder.getTotalPrice());
-                int rowsAffected = pstmt.executeUpdate();
-
-                if (rowsAffected == 0) {
-                    throw new SQLException("Không thể chèn bản ghi vào bảng ProductOrders.");
-                }
-
-                // Lấy ProductOrderID vừa tạo
-                try (ResultSet rs = pstmt.getGeneratedKeys()) {
-                    if (rs.next()) {
-                        int generatedProductOrderID = rs.getInt(1);
-                        productOrder.setProductOrderID(generatedProductOrderID);
+            // Lấy ProductOrderID lớn nhất và tăng lên 1
+            int newProductOrderID = 1;
+            String getMaxIDSql = "SELECT MAX(ProductOrderID) FROM ProductOrders WITH (UPDLOCK, HOLDLOCK)";
+            try (PreparedStatement pstmt = connection.prepareStatement(getMaxIDSql);
+                 ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    int maxID = rs.getInt(1);
+                    if (rs.wasNull()) {
+                        newProductOrderID = 1; // Nếu bảng rỗng, bắt đầu từ 1
                     } else {
-                        throw new SQLException("Không thể lấy ProductOrderID sau khi chèn bản ghi.");
+                        newProductOrderID = maxID + 1;
                     }
                 }
             }
 
-            // Commit giao dịch
+            productOrder.setProductOrderID(newProductOrderID);
+            System.out.println("Saving ProductOrder with ProductOrderID: " + productOrder.getProductOrderID()); // Gỡ lỗi
+
+            // Kiểm tra giá trị ProductOrderID trước khi chèn
+            if (productOrder.getProductOrderID() <= 0) {
+                throw new SQLException("ProductOrderID không hợp lệ: " + productOrder.getProductOrderID());
+            }
+
+            String sql = "INSERT INTO ProductOrders (ProductOrderID, OrderID, ProductID, Quantity, TotalPrice) VALUES (?, ?, ?, ?, ?)";
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                pstmt.setInt(1, productOrder.getProductOrderID());
+                pstmt.setInt(2, productOrder.getOrderID().getOrderID());
+                pstmt.setInt(3, productOrder.getProductID());
+                pstmt.setInt(4, productOrder.getQuantity());
+                pstmt.setDouble(5, productOrder.getTotalPrice());
+                pstmt.executeUpdate();
+            }
+
             connection.commit();
         } catch (SQLException e) {
-            // Rollback nếu có lỗi
-        	connection.rollback();
+            connection.rollback();
             throw new SQLException("Lỗi khi lưu ProductOrder: " + e.getMessage(), e);
         } finally {
-            // Khôi phục trạng thái autoCommit
-        	connection.setAutoCommit(autoCommit);
+            connection.setAutoCommit(autoCommit);
         }
     }
 
