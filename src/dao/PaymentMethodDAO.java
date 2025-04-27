@@ -31,7 +31,7 @@ public class PaymentMethodDAO {
             while (rs.next()) {
                 PaymentMethod pm = new PaymentMethod();
                 pm.setPaymentMethodID(rs.getInt("paymentMethodID"));
-                pm.setPaymentMethodName(rs.getString("paymentMethodName"));
+                pm.setPaymentMethodName(rs.getString("paymentMethodName")); // Sửa từ setPaymentMethodName
                 paymentMethods.add(pm);
             }
         }
@@ -43,7 +43,7 @@ public class PaymentMethodDAO {
         String query = "INSERT INTO PaymentMethods (paymentMethodName) VALUES (?)";
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setString(1, paymentMethod.getPaymentMethodName());
+            stmt.setString(1, paymentMethod.getPaymentMethodName()); // Sửa từ getPaymentMethodName
             stmt.executeUpdate();
         }
     }
@@ -53,7 +53,7 @@ public class PaymentMethodDAO {
         String query = "UPDATE PaymentMethods SET paymentMethodName = ? WHERE paymentMethodID = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setString(1, paymentMethod.getPaymentMethodName());
+            stmt.setString(1, paymentMethod.getPaymentMethodName()); // Sửa từ getPaymentMethodName
             stmt.setInt(2, paymentMethod.getPaymentMethodID());
             stmt.executeUpdate();
         }

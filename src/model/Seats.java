@@ -4,8 +4,13 @@ public class Seats {
     private int seatID;
     private String seatNumber;
     private Rooms room;
+    
+    
+    public Seats() {
+	
+	}
 
-    public Seats(int seatID, String seatNumber, Rooms room) {
+	public Seats(int seatID, String seatNumber, Rooms room) {
         this.seatID = seatID;
         this.seatNumber = seatNumber;
         this.room = room;

@@ -1,6 +1,5 @@
 package gui;
 
-import dbs.connectDB;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -10,6 +9,7 @@ import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.Connection;
+
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
@@ -21,8 +21,10 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
+
+import dao.UserDAO; // Thêm import cho UserDAO
+import dbs.connectDB;
 import model.Users;
-import service.UserManager;
 
 public class Login_GUI extends JFrame implements ActionListener {
     private JLabel lblTenDN;
@@ -31,15 +33,15 @@ public class Login_GUI extends JFrame implements ActionListener {
     private JLabel lblPw;
     private JButton btnDN;
     private JButton btnThoat;
-    private UserManager userManager;
+    private UserDAO userDAO; // Thay UserManager bằng UserDAO
     private Connection connection;
 
     public Login_GUI(Connection connection) {
         this.connection = connection;
-        this.userManager = new UserManager(connection);
+        this.userDAO = new UserDAO(connection); // Khởi tạo UserDAO với connection
 
         setTitle("Login");
-        setSize(600, 500); // Kích thước 600x500
+        setSize(600, 500);
         setLocationRelativeTo(null);
         setResizable(false);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -102,14 +104,17 @@ public class Login_GUI extends JFrame implements ActionListener {
             String password = new String(txtPw.getPassword());
 
             try {
-                Users user = userManager.loginUser(username, password);
+                Users user = userDAO.loginUser(username, password); // Gọi UserDAO thay vì UserManager
+                // Thêm log để kiểm tra user
+                System.out.println("User after login in Login_GUI: " + (user != null ? user.toString() : "null"));
                 if (user != null) {
-                    //B: Kiểm tra roleID để chuyển hướng giao diện
+                    System.out.println("FullName after login in Login_GUI: " + user.getFullName());
+                    // Kiểm tra roleID để chuyển hướng giao diện
                     MainFrame mainFrame = new MainFrame(connection, user);
                     if (user.getRoleID() == 1) {
-                        mainFrame.showMainGUI2(); //B: roleID = 1 thì vào AdminGUI (admin)
+                        mainFrame.showMainGUI2(); // roleID = 1 thì vào AdminGUI (admin)
                     } else if (user.getRoleID() == 2) {
-                        mainFrame.showMainGUI(); //B: roleID = 2 thì vào StaffGUI (staff)
+                        mainFrame.showMainGUI(); // roleID = 2 thì vào StaffGUI (staff)
                     }
                     mainFrame.setVisible(true);
                     dispose();

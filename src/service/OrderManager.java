@@ -6,24 +6,23 @@ import dao.PaymentMethodDAO;
 import model.Orders;
 import model.Product_Orders;
 import model.PaymentMethod;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
-@SuppressWarnings("unused")
 
 public class OrderManager {
     private OrderDAO orderDAO;
     private ProductOrderDAO productOrderDAO;
     private PaymentMethodDAO paymentMethodDAO;
 
-    public OrderManager() {
-        this.orderDAO = new OrderDAO();
-        this.productOrderDAO = new ProductOrderDAO();
-        this.paymentMethodDAO = new PaymentMethodDAO();
+    public OrderManager(Connection connection) throws SQLException {
+        this.orderDAO = new OrderDAO(connection);
+        this.productOrderDAO = new ProductOrderDAO(connection);
+        this.paymentMethodDAO = new PaymentMethodDAO(connection);
     }
 
     // Create
     public void createOrder(Orders order, List<Product_Orders> productOrders) throws SQLException {
-        // Kiểm tra dữ liệu đầu vào
         if (order.getUserID() == null || order.getUserID().getUserID() <= 0) {
             throw new IllegalArgumentException("Invalid user ID");
         }
@@ -37,7 +36,6 @@ public class OrderManager {
             throw new IllegalArgumentException("Order date cannot be null");
         }
 
-        // Tính tổng giá 
         double totalPrice = 0.0;
         for (Product_Orders po : productOrders) {
             if (po.getQuantity() <= 0) {
@@ -50,12 +48,10 @@ public class OrderManager {
         }
         order.setTotalAmount(totalPrice);
 
-        // Save
         orderDAO.saveOrder(order);
 
-        // Save chi tiết đơn hàng
         for (Product_Orders po : productOrders) {
-            po.setOrderID(order); 
+            po.setOrderID(order);
             productOrderDAO.saveProductOrder(po);
         }
     }
@@ -71,9 +67,8 @@ public class OrderManager {
             throw new SQLException("Order with ID " + orderID + " not found");
         }
 
-        // Lấy chi tiết đơn hàng
-       
         List<Product_Orders> productOrders = productOrderDAO.getProductOrdersByOrder(orderID);
+        order.setProductOrders(productOrders); // Gán productOrders vào order
 
         return order;
     }
@@ -86,14 +81,19 @@ public class OrderManager {
 
         List<Orders> orders = orderDAO.getOrdersByUser(userID);
         for (Orders order : orders) {
-            
             List<Product_Orders> productOrders = productOrderDAO.getProductOrdersByOrder(order.getOrderID());
+            order.setProductOrders(productOrders); // Gán productOrders vào order
         }
         return orders;
     }
 
-    // Lấy tất cả phương thức thanh toán 
+    // Lấy tất cả phương thức thanh toán
     public List<PaymentMethod> getAllPaymentMethods() throws SQLException {
         return paymentMethodDAO.getAllPaymentMethods();
+    }
+
+    // Lấy tất cả đơn hàng
+    public List<Orders> getAllOrders() throws SQLException {
+        return orderDAO.getAllOrders();
     }
 }
