@@ -11,8 +11,6 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.math.BigDecimal;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,6 +24,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import javax.swing.Timer;
 import model.Orders;
 import model.Product_Orders;
 import model.Products;
@@ -166,39 +165,19 @@ public class ConfirmationGUI extends JPanel {
                 conn.setAutoCommit(false);
 
                 OrderDAO orderDAO = new OrderDAO(conn);
+                System.out.println("Before saving order: OrderID = " + order.getOrderID());
                 orderDAO.saveOrder(order);
                 if (order.getOrderID() <= 0) {
                     throw new SQLException("orderID không hợp lệ sau khi lưu đơn hàng: " + order.getOrderID());
                 }
                 System.out.println("Order saved with orderID: " + order.getOrderID());
 
-             // Lưu Product_Orders trực tiếp
-                if (!cart.isEmpty()) {
-                    // Lấy ProductOrderID lớn nhất hiện có và tăng lên 1
-                    int nextProductOrderID;
-                    try (PreparedStatement ps = conn.prepareStatement("SELECT MAX(ProductOrderID) FROM Product_Orders");
-                         ResultSet rs = ps.executeQuery()) {
-                        if (rs.next()) {
-                            nextProductOrderID = rs.getInt(1) + 1; // Tăng ProductOrderID lên 1
-                        } else {
-                            nextProductOrderID = 1; // Nếu bảng rỗng, bắt đầu từ 1
-                        }
-                    }
-
-                    // Lưu trực tiếp vào bảng Product_Orders
-                    String query = "INSERT INTO Product_Orders (ProductOrderID, orderID, productID, quantity, price) VALUES (?, ?, ?, ?, ?)";
-                    try (PreparedStatement ps = conn.prepareStatement(query)) {
-                        for (Product_Orders po : cart) {
-                            po.setOrderID(order);
-                            ps.setInt(1, nextProductOrderID++); // Gán ProductOrderID và tăng lên cho bản ghi tiếp theo
-                            ps.setInt(2, po.getOrderID().getOrderID());
-                            ps.setInt(3, po.getProductID());
-                            ps.setInt(4, po.getQuantity());
-                            ps.setDouble(5, po.getTotalPrice()); // Sử dụng price thay vì TotalPrice
-                            ps.executeUpdate();
-                        }
-                    }
+                ProductOrderDAO productOrderDAO = new ProductOrderDAO(conn);
+                for (Product_Orders po : cart) {
+                    po.setOrderID(order);
+                    productOrderDAO.saveProductOrder(po);
                 }
+
                 TicketDAO ticketDAO = new TicketDAO(conn);
                 for (int i = 0; i < ticketQuantity; i++) {
                     Tickets ticket = new Tickets();
@@ -214,28 +193,43 @@ public class ConfirmationGUI extends JPanel {
                 }
 
                 conn.commit();
+
+                // Hiển thị thông báo thành công và chuyển hướng sau 2 giây
                 JOptionPane.showMessageDialog(ConfirmationGUI.this, "Đặt vé thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+
+                // Xóa giỏ hàng sau khi đặt vé thành công
                 mainFrame.clearCart();
 
-                // Chuyển về màn hình chính (MainGUI hoặc MainGUI2 dựa trên roleID của user)
-                if (user.getRoleID() == 1) {
-                    mainFrame.showMainGUI2(); // AdminGUI
-                } else {
-                    mainFrame.showMainGUI(); // StaffGUI
-                }
-            } catch (SQLException ex) {
+                // Chuyển hướng về trang chủ dựa trên roleID của user
+                Timer timer = new Timer(2000, new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent evt) {
+                        // Kiểm tra vai trò của user để chuyển hướng đúng
+                        if (user.getRoleID() == 1) {
+                            // Nếu là admin, chuyển về MainGUI2
+                            mainFrame.showMainGUI2();
+                        } else {
+                            // Nếu là nhân viên, chuyển về MainGUI
+                            mainFrame.showMainGUI();
+                        }
+                    }
+                });
+                timer.setRepeats(false); // Chỉ chạy một lần
+                timer.start();
+
+            } catch (SQLException e1) {
                 try {
                     conn.rollback();
                 } catch (SQLException rollbackEx) {
                     rollbackEx.printStackTrace();
                 }
-                JOptionPane.showMessageDialog(ConfirmationGUI.this, "Lỗi khi lưu đơn hàng: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
-                ex.printStackTrace();
+                JOptionPane.showMessageDialog(ConfirmationGUI.this, "Lỗi khi lưu đơn hàng: " + e1.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                e1.printStackTrace();
             } finally {
                 try {
                     conn.setAutoCommit(true);
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
+                } catch (SQLException e1) {
+                    e1.printStackTrace();
                 }
             }
         }
@@ -286,7 +280,7 @@ public class ConfirmationGUI extends JPanel {
 
     private double calculateTotalAmount() {
         double ticketTotal = ticketPrice.doubleValue() * ticketQuantity;
-        double productTotal = cart.stream().mapToDouble(Product_Orders::getTotalPrice).sum();
+        double productTotal = cart.stream().mapToDouble(po -> po.getTotalPrice() * po.getQuantity()).sum();
         return ticketTotal + productTotal;
     }
 
