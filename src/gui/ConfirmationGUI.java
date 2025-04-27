@@ -1,14 +1,12 @@
 package gui;
 
-import dao.OrderDAO;
-import dao.ProductDAO;
-import dao.ProductOrderDAO;
-import dao.TicketDAO;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -16,6 +14,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
+
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -24,8 +23,10 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+
+import dao.OrderDAO;
+import dao.ProductDAO;
+import dao.TicketDAO;
 import model.Orders;
 import model.Product_Orders;
 import model.Products;
@@ -176,7 +177,7 @@ public class ConfirmationGUI extends JPanel {
                 if (!cart.isEmpty()) {
                     // Lấy ProductOrderID lớn nhất hiện có và tăng lên 1
                     int nextProductOrderID;
-                    try (PreparedStatement ps = conn.prepareStatement("SELECT MAX(ProductOrderID) FROM Product_Orders");
+                    try (PreparedStatement ps = conn.prepareStatement("SELECT MAX(ProductOrderID) FROM ProductOrders");
                          ResultSet rs = ps.executeQuery()) {
                         if (rs.next()) {
                             nextProductOrderID = rs.getInt(1) + 1; // Tăng ProductOrderID lên 1
@@ -186,7 +187,7 @@ public class ConfirmationGUI extends JPanel {
                     }
 
                     // Lưu trực tiếp vào bảng Product_Orders
-                    String query = "INSERT INTO Product_Orders (ProductOrderID, orderID, productID, quantity, price) VALUES (?, ?, ?, ?, ?)";
+                    String query = "INSERT INTO ProductOrders (ProductOrderID, orderID, productID, quantity, TotalPrice) VALUES (?, ?, ?, ?, ?)";
                     try (PreparedStatement ps = conn.prepareStatement(query)) {
                         for (Product_Orders po : cart) {
                             po.setOrderID(order);
