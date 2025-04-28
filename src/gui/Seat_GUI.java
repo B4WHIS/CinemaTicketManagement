@@ -179,12 +179,15 @@ public class Seat_GUI extends JPanel implements ActionListener {
         // Thêm panel ghế vào giữa bố cục
         add(pnlSeat, BorderLayout.CENTER);
 
-        // Tạo và cấu hình panel nút xác nhận ở phía dưới
-        JPanel pnlConfirm = new JPanel();
-        confirmButton = new JButton("Xác nhận");
-        confirmButton.addActionListener(this);
-        pnlConfirm.add(confirmButton);
-        add(pnlConfirm, BorderLayout.SOUTH);
+		// Tạo và cấu hình panel nút xác nhận ở phía dưới
+		JPanel pnlConfirm = new JPanel();
+		confirmButton = new JButton("Xác nhận");
+		JButton backButton = new JButton("Quay lại"); // Thêm nút Quay lại
+		confirmButton.addActionListener(this);
+		backButton.addActionListener(this); // Gắn ActionListener cho nút Quay lại
+		pnlConfirm.add(backButton); // Thêm nút Quay lại vào panel
+		pnlConfirm.add(confirmButton); // Thêm nút Xác nhận
+		add(pnlConfirm, BorderLayout.SOUTH);
     }
 
     // Thiết lập trình lựa chọn ghế
@@ -194,43 +197,62 @@ public class Seat_GUI extends JPanel implements ActionListener {
 
     // Xử lý sự kiện khi nhấn nút (chọn ghế hoặc xác nhận)
     @Override
-    public void actionPerformed(ActionEvent e) {
-        Object source = e.getSource();
+public void actionPerformed(ActionEvent e) {
+    Object source = e.getSource();
 
-        // Xử lý nhấn nút xác nhận
-        if (source == confirmButton) {
-            handleConfirmAction();
-            return;
+    // Xử lý nhấn nút quay lại
+    if (source instanceof JButton && ((JButton) source).getText().equals("Quay lại")) {
+        try {
+            // Tạo lại DetailFilm_GUI với movieID được lấy từ showtime
+            Showtimes_DAO showtimeDAO = new Showtimes_DAO(mainFrame.getConnection());
+            Showtimes showtime = showtimeDAO.getShowtimeByID(showtimeID);
+            if (showtime != null) {
+                int movieID = showtime.getMovie().getMovieID();
+                DetailFilm_GUI detailPanel = new DetailFilm_GUI(mainFrame.getConnection(), movieID, mainFrame);
+                mainFrame.showScreen("DetailFilmGUI", detailPanel);
+            } else {
+                JOptionPane.showMessageDialog(this, "Không thể lấy thông tin suất chiếu!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Lỗi khi quay lại: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
+        return;
+    }
 
-        // Xử lý nhấn nút ghế
-        JButton clickedSeat = (JButton) source;
-        for (int row = 0; row < 10; row++) {
-            for (int col = 0; col < 10; col++) {
-                if (seats[row][col] == clickedSeat) {
-                    Seats seat = seatObjects[row][col];
-                    if (seat != null && clickedSeat.isEnabled()) {
-                        if (!seatStatus[row][col]) {
-                            // Chọn ghế nếu chưa đủ số lượng vé
-                            if (selectedSeats.size() < ticketQuantity) {
-                                clickedSeat.setBackground(Color.GREEN); // Ghế được chọn màu xanh lá
-                                seatStatus[row][col] = true;
-                                selectedSeats.add(seat);
-                            } else {
-                                JOptionPane.showMessageDialog(this, "Bạn đã chọn đủ số ghế!", "Thông báo", JOptionPane.WARNING_MESSAGE);
-                            }
+    // Xử lý nhấn nút xác nhận
+    if (source == confirmButton) {
+        handleConfirmAction();
+        return;
+    }
+
+    // Xử lý nhấn nút ghế
+    JButton clickedSeat = (JButton) source;
+    for (int row = 0; row < 10; row++) {
+        for (int col = 0; col < 10; col++) {
+            if (seats[row][col] == clickedSeat) {
+                Seats seat = seatObjects[row][col];
+                if (seat != null && clickedSeat.isEnabled()) {
+                    if (!seatStatus[row][col]) {
+                        // Chọn ghế nếu chưa đủ số lượng vé
+                        if (selectedSeats.size() < ticketQuantity) {
+                            clickedSeat.setBackground(Color.GREEN); // Ghế được chọn màu xanh lá
+                            seatStatus[row][col] = true;
+                            selectedSeats.add(seat);
                         } else {
-                            // Bỏ chọn ghế
-                            clickedSeat.setBackground(Color.WHITE);
-                            seatStatus[row][col] = false;
-                            selectedSeats.remove(seat);
+                            JOptionPane.showMessageDialog(this, "Bạn đã chọn đủ số ghế!", "Thông báo", JOptionPane.WARNING_MESSAGE);
                         }
+                    } else {
+                        // Bỏ chọn ghế
+                        clickedSeat.setBackground(Color.WHITE);
+                        seatStatus[row][col] = false;
+                        selectedSeats.remove(seat);
                     }
-                    return;
                 }
+                return;
             }
         }
     }
+}
 
     //Nhấn nút xác nhận
     private void handleConfirmAction() {

@@ -1,5 +1,7 @@
 package gui;
 
+import dao.Rooms_DAO;
+import dao.Showtimes_DAO;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -16,7 +18,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
@@ -28,9 +29,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
-
-import dao.Rooms_DAO;
-import dao.Showtimes_DAO;
 import model.Movies;
 import model.Rooms;
 import model.Showtimes;
