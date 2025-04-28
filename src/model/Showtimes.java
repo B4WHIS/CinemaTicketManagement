@@ -19,10 +19,6 @@ public class Showtimes {
         this.startTime = startTime;
         this.dateTime = dateTime;
         this.price = price;
-        // B: Log ngay sau khi gán để kiểm tra
-        System.out.println("Inside Showtimes constructor - ShowtimeID: " + this.showTimeID +
-                ", RoomID: " + (this.room != null ? this.room.getRoomID() : "null") +
-                ", RoomName: " + (this.room != null ? this.room.getRoomName() : "null"));
     }
 
     public Showtimes() {
@@ -42,10 +38,7 @@ public class Showtimes {
             System.err.println("Room is null for ShowtimeID: " + showTimeID);
             return new Rooms(-1, "Phòng không hợp lệ", 0,"...");
         }
-        // B: Log khi getRoom được gọi
-        System.out.println("getRoom called - ShowtimeID: " + showTimeID +
-                ", RoomID: " + room.getRoomID() +
-                ", RoomName: " + room.getRoomName());
+        
         return room;
     }
 

@@ -11,22 +11,13 @@ public class Rooms {
         this.roomName = roomName;
         this.capacity = capacity;
         this.type = type;
-        // B: Log khi tạo đối tượng Rooms
-        System.out.println("Inside Rooms constructor - RoomID: " + this.roomID +
-                ", RoomName: " + this.roomName +
-                ", Capacity: " + this.capacity +
-                ", Type: " + this.type);
     }
 
     public int getRoomID() {
-        // B: Log khi getRoomID được gọi
-        System.out.println("getRoomID called - RoomID: " + roomID);
         return roomID;
     }
 
     public String getRoomName() {
-        // B: Log khi getRoomName được gọi
-        System.out.println("getRoomName called - RoomName: " + roomName);
         return roomName;
     }
 

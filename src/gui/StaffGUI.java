@@ -3,7 +3,6 @@ package gui;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -15,7 +14,6 @@ import java.sql.SQLException;
 import java.util.List;
 
 import javax.swing.BorderFactory;
-import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -51,11 +49,11 @@ public class StaffGUI extends JPanel {
         this.user = user;
         this.mainFrame = mainFrame;
 
-        // Thêm log để kiểm tra user
-        System.out.println("User object in StaffGUI: " + (user != null ? user.toString() : "null"));
-        if (user != null) {
-            System.out.println("User FullName in StaffGUI: " + user.getFullName());
-        }
+        // // Thêm log để kiểm tra user
+        // System.out.println("User object in StaffGUI: " + (user != null ? user.toString() : "null"));
+        // if (user != null) {
+        //     System.out.println("User FullName in StaffGUI: " + user.getFullName());
+        // }
 
         // Kiểm tra các tham số đầu vào
         if (connection == null) {
@@ -86,14 +84,14 @@ public class StaffGUI extends JPanel {
             JButton btn = new JButton(item);
             if (item.equals("Lịch sử đơn hàng")) {
                 btn.addActionListener(e -> {
-                    System.out.println("Mở trang Lịch sử đơn hàng");
+                    // System.out.println("Mở trang Lịch sử đơn hàng");
                     if (centerContentPanel != null && centerCardLayout != null) {
                         centerCardLayout.show(centerContentPanel, "OrderHistory");
                     }
                 });
             } else if (item.equals("Trang chủ")) {
                 btn.addActionListener(e -> {
-                    System.out.println("Mở trang Trang chủ");
+                    // System.out.println("Mở trang Trang chủ");
                     showMoviesPanel();
                 });
             } else if (item.equals("Quản lý phim")) {
@@ -188,28 +186,28 @@ public class StaffGUI extends JPanel {
     }
 
     public void showMoviesPanel() {
-        System.out.println("Showing Movies panel");
+        // System.out.println("Showing Movies panel");
         if (centerContentPanel != null && centerCardLayout != null) {
-            System.out.println("centerContentPanel component count: " + centerContentPanel.getComponentCount());
+            // System.out.println("centerContentPanel component count: " + centerContentPanel.getComponentCount());
             centerCardLayout.show(centerContentPanel, "Movies");
             loadMovies("");
         } else {
-            System.err.println("centerContentPanel or centerCardLayout is null");
+            // System.err.println("centerContentPanel or centerCardLayout is null");
         }
     }
 
     public void loadMovies(String keyword) {
         if (moviesPanel == null) {
-            System.err.println("moviesPanel is null");
+            // System.err.println("moviesPanel is null");
             return;
         }
 
         moviesPanel.removeAll();
         try {
             List<Movies> movies = movieManager.getAllMovies();
-            System.out.println("Number of movies loaded: " + (movies != null ? movies.size() : 0));
+            // System.out.println("Number of movies loaded: " + (movies != null ? movies.size() : 0));
             if (movies == null || movies.isEmpty()) {
-                System.out.println("No movies found in the database.");
+                // System.out.println("No movies found in the database.");
                 JOptionPane.showMessageDialog(this, "Không có phim nào trong cơ sở dữ liệu.", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
             } else {
                 boolean foundMovies = false;
@@ -221,7 +219,7 @@ public class StaffGUI extends JPanel {
 
                 for (Movies movie : movies) {
                     if (movie.getMovieID() == 0) {
-                        System.out.println("Skipping movie with MovieID 0");
+                        // System.out.println("Skipping movie with MovieID 0");
                         continue;
                     }
 
@@ -240,16 +238,16 @@ public class StaffGUI extends JPanel {
                     img.setHorizontalAlignment(SwingConstants.CENTER);
 
                     String imagePath = movie.getImage();
-                    System.out.println("Original image path from database for MovieID " + movie.getMovieID() + ": " + imagePath);
+                    // System.out.println("Original image path from database for MovieID " + movie.getMovieID() + ": " + imagePath);
 
                     if (imagePath != null && !imagePath.isEmpty()) {
                         try {
                             String resourcePath = "/img/movies/" + imagePath.substring(imagePath.lastIndexOf("/") + 1);
-                            System.out.println("Resource path for getResource: " + resourcePath);
+                            // System.out.println("Resource path for getResource: " + resourcePath);
 
                             java.net.URL resourceURL = getClass().getResource(resourcePath);
                             if (resourceURL == null) {
-                                System.err.println("Resource not found in classpath: " + resourcePath);
+                                // System.err.println("Resource not found in classpath: " + resourcePath);
                                 img.setText(movie.getTitle());
                                 img.setOpaque(true);
                                 img.setBackground(Color.LIGHT_GRAY);
@@ -257,7 +255,7 @@ public class StaffGUI extends JPanel {
                             } else {
                                 ImageIcon icon = new ImageIcon(resourceURL);
                                 if (icon.getIconWidth() == -1) {
-                                    System.err.println("Failed to load image as resource: " + resourcePath);
+                                    // System.err.println("Failed to load image as resource: " + resourcePath);
                                     img.setText(movie.getTitle());
                                     img.setOpaque(true);
                                     img.setBackground(Color.LIGHT_GRAY);
@@ -268,14 +266,14 @@ public class StaffGUI extends JPanel {
                                 }
                             }
                         } catch (Exception e) {
-                            System.err.println("Error loading image for MovieID " + movie.getMovieID() + ": " + e.getMessage());
+                            // System.err.println("Error loading image for MovieID " + movie.getMovieID() + ": " + e.getMessage());
                             img.setText(movie.getTitle());
                             img.setOpaque(true);
                             img.setBackground(Color.LIGHT_GRAY);
                             img.setFont(new Font("Arial", Font.PLAIN, 14));
                         }
                     } else {
-                        System.out.println("No image for movie: " + movie.getTitle());
+                        // System.out.println("No image for movie: " + movie.getTitle());
                         img.setText(movie.getTitle());
                         img.setOpaque(true);
                         img.setBackground(Color.LIGHT_GRAY);
@@ -309,7 +307,7 @@ public class StaffGUI extends JPanel {
                         rowCount++;
                     }
 
-                    System.out.println("Added movie card for: " + movie.getTitle() + " (MovieID: " + movie.getMovieID() + ")");
+                    // System.out.println("Added movie card for: " + movie.getTitle() + " (MovieID: " + movie.getMovieID() + ")");
                 }
 
                 if (!foundMovies && !keyword.isEmpty()) {

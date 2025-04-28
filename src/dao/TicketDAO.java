@@ -1,32 +1,31 @@
 package dao;
 
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 import dbs.connectDB;
-import model.Orders;
-import model.Showtimes;
 import model.Tickets;
-import model.Seats;
 
 public class TicketDAO {
     private final Connection con;
 
+    // Constructor mặc định: lấy connection từ connectDB
     public TicketDAO() {
         this.con = connectDB.getConnection();
     }
 
+    // Constructor với connection truyền vào
     public TicketDAO(Connection conn) {
         this.con = conn;
     }
 
+    // Lưu ticket
     public void saveTicket(Tickets ticket) throws SQLException {
+        // Lấy TicketID mới: +1 từ TicketID lớn nhất
         String getMaxIdSql = "SELECT MAX(TicketID) FROM Tickets";
         int newTicketId = 1;
         try (PreparedStatement maxStmt = con.prepareStatement(getMaxIdSql)) {
@@ -39,143 +38,23 @@ public class TicketDAO {
 
         ticket.setTicketID(newTicketId);
 
-        String sql = "INSERT INTO Tickets (TicketID, ShowTimeID, SaleDate, OrderID, SeatID, Price) VALUES (?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement stmt = con.prepareStatement(sql)) {
+        // Thêm ticket vào database
+        String query = "{call sp_InsertTicket(?, ?, ?, ?, ?, ?)}";
+        try (CallableStatement stmt = con.prepareCall(query)) {
             stmt.setInt(1, ticket.getTicketID());
             stmt.setInt(2, ticket.getShowTimeID().getShowTimeID());
             stmt.setTimestamp(3, Timestamp.valueOf(ticket.getSaleDate()));
-            int orderId = ticket.getOrderID().getOrderID();
-            System.out.println("Inserting ticket with orderID: " + orderId);
-            stmt.setInt(4, orderId);
+            stmt.setInt(4, ticket.getOrderID().getOrderID());
+            
             if (ticket.getSeatID() != null) {
                 stmt.setInt(5, ticket.getSeatID().getSeatID());
             } else {
                 throw new SQLException("SeatID không được null.");
             }
+            
             stmt.setDouble(6, ticket.getPrice());
-            stmt.executeUpdate();
+            stmt.execute();
             System.out.println("Ticket saved successfully with TicketID: " + ticket.getTicketID());
         }
-    }
-
-    public List<Tickets> getAllTickets() throws SQLException {
-        List<Tickets> tickets = new ArrayList<>();
-        String query = "SELECT * FROM Tickets";
-        try (PreparedStatement ps = con.prepareStatement(query);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                tickets.add(createTicketFromResultSet(rs));
-            }
-        }
-        return tickets;
-    }
-
-    public Tickets getTicketById(int ticketID) throws SQLException {
-        String query = "SELECT * FROM Tickets WHERE TicketID = ?";
-        try (PreparedStatement ps = con.prepareStatement(query)) {
-            ps.setInt(1, ticketID);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return createTicketFromResultSet(rs);
-                }
-            }
-        }
-        return null;
-    }
-
-    public List<Tickets> getTicketByOrder(int orderID) throws SQLException {
-        List<Tickets> tickets = new ArrayList<>();
-        String query = "SELECT * FROM Tickets WHERE OrderID = ?";
-        try (PreparedStatement ps = con.prepareStatement(query)) {
-            ps.setInt(1, orderID);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    tickets.add(createTicketFromResultSet(rs));
-                }
-            }
-        }
-        return tickets;
-    }
-
-    public boolean isSeat(int showtimeID, int seatID) throws SQLException {
-        String query = "SELECT COUNT(*) FROM Tickets WHERE ShowTimeID = ? AND SeatID = ?";
-        try (PreparedStatement ps = con.prepareStatement(query)) {
-            ps.setInt(1, showtimeID);
-            ps.setInt(2, seatID);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1) > 0;
-                }
-            }
-        }
-        return false;
-    }
-
-    public void updateTicket(Tickets ticket) throws SQLException {
-        String query = "UPDATE Tickets SET ShowTimeID = ?, SaleDate = ?, OrderID = ?, SeatID = ?, Price = ? WHERE TicketID = ?";
-        try (PreparedStatement ps = con.prepareStatement(query)) {
-            ps.setInt(1, ticket.getShowTimeID().getShowTimeID());
-            ps.setObject(2, ticket.getSaleDate());
-            ps.setInt(3, ticket.getOrderID().getOrderID());
-            if (ticket.getSeatID() != null) {
-                ps.setInt(4, ticket.getSeatID().getSeatID());
-            } else {
-                ps.setNull(4, java.sql.Types.INTEGER);
-            }
-            ps.setDouble(5, ticket.getPrice());
-            ps.setInt(6, ticket.getTicketID());
-            ps.executeUpdate();
-        }
-    }
-
-    public void deleteTicket(int ticketID) throws SQLException {
-        String query = "DELETE FROM Tickets WHERE TicketID = ?";
-        try (PreparedStatement ps = con.prepareStatement(query)) {
-            ps.setInt(1, ticketID);
-            ps.executeUpdate();
-        }
-    }
-
-    private Tickets createTicketFromResultSet(ResultSet rs) throws SQLException {
-        Tickets ticket = new Tickets();
-        ticket.setTicketID(rs.getInt("TicketID"));
-        
-        Showtimes showtime = new Showtimes();
-        showtime.setShowTimeID(rs.getInt("ShowTimeID"));
-        ticket.setShowTimeID(showtime);
-        
-        ticket.setSaleDate(rs.getObject("SaleDate", LocalDateTime.class));
-        
-        Orders order = new Orders();
-        order.setOrderID(rs.getInt("OrderID"));
-        ticket.setOrderID(order);
-        
-        SeatDAO seatDAO = new SeatDAO(con);
-        Seats seat = seatDAO.getSeatByID(rs.getInt("SeatID"));
-        ticket.setSeatID(seat);
-        
-        ticket.setPrice(rs.getDouble("Price"));
-        return ticket;
-    }
-
-    // Thêm phương thức để lấy danh sách ghế theo orderID
-    public List<Seats> getSeatsByOrderId(int orderId) throws SQLException {
-        List<Seats> seats = new ArrayList<>();
-        String query = "SELECT s.SeatID, s.SeatNumber " +
-                      "FROM Tickets t " +
-                      "JOIN Seats s ON t.SeatID = s.SeatID " +
-                      "WHERE t.OrderID = ?";
-        try (PreparedStatement stmt = con.prepareStatement(query)) {
-            stmt.setInt(1, orderId);
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    Seats seat = new Seats();
-                    seat.setSeatID(rs.getInt("SeatID"));
-                    seat.setSeatNumber(rs.getString("SeatNumber"));
-                    seats.add(seat);
-                }
-            }
-        }
-        return seats;
     }
 }

@@ -183,12 +183,11 @@ public class DetailFilm_GUI extends JPanel {
             }
 
             try {
-                // Log để kiểm tra dữ liệu trước khi chuyển
-                System.out.println("Before creating Seat_GUI - ShowtimeID: " + showtime.getShowTimeID() +
-                        ", RoomID: " + room.getRoomID() +
-                        ", RoomName: " + room.getRoomName() +
-                        ", TicketQuantity: " + ticketQuantity +
-                        ", TicketPrice: " + ticketPrice);
+                // System.out.println("Before creating Seat_GUI - ShowtimeID: " + showtime.getShowTimeID() +
+                //         ", RoomID: " + room.getRoomID() +
+                //         ", RoomName: " + room.getRoomName() +
+                //         ", TicketQuantity: " + ticketQuantity +
+                //         ", TicketPrice: " + ticketPrice);
 
                 // Tạo Seat_GUI và chuyển màn hình
                 Seat_GUI seatPanel = new Seat_GUI(room, showtime.getShowTimeID(), ticketQuantity, ticketPrice, mainFrame);
@@ -304,7 +303,7 @@ public class DetailFilm_GUI extends JPanel {
                 String resourcePath = "/img/movies/" + imagePath.substring(imagePath.lastIndexOf("/") + 1);
                 java.net.URL resourceURL = getClass().getResource(resourcePath);
                 if (resourceURL == null) {
-                    System.err.println("Resource not found in classpath: " + resourcePath);
+                    // System.err.println("Resource not found in classpath: " + resourcePath);
                     posterLabel.setText("No Image");
                     posterLabel.setOpaque(true);
                     posterLabel.setBackground(Color.LIGHT_GRAY);
@@ -312,7 +311,7 @@ public class DetailFilm_GUI extends JPanel {
                 } else {
                     ImageIcon icon = new ImageIcon(resourceURL);
                     if (icon.getIconWidth() == -1) {
-                        System.err.println("Failed to load image as resource: " + resourcePath);
+                        // System.err.println("Failed to load image as resource: " + resourcePath);
                         posterLabel.setText("No Image");
                         posterLabel.setOpaque(true);
                         posterLabel.setBackground(Color.LIGHT_GRAY);
@@ -324,7 +323,7 @@ public class DetailFilm_GUI extends JPanel {
                     }
                 }
             } catch (Exception e) {
-                System.err.println("Error loading image for MovieID " + selectedMovieID + ": " + e.getMessage());
+                // System.err.println("Error loading image for MovieID " + selectedMovieID + ": " + e.getMessage());
                 posterLabel.setText("No Image");
                 posterLabel.setOpaque(true);
                 posterLabel.setBackground(Color.LIGHT_GRAY);

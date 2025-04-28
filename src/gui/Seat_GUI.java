@@ -1,4 +1,6 @@
+
 package gui;
+
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -29,20 +31,23 @@ import model.Showtimes;
 import model.Users;
 
 public class Seat_GUI extends JPanel implements ActionListener {
+    
     private JButton[][] seats;
     private boolean[][] seatStatus;
     private List<Seats> selectedSeats;
     private SeatDAO seatDAO;
     private SeatStatusDAO seatStatusDAO;
+    
     private Rooms room;
-    private int showtimeID;
+    private int showtimeID;  
     private int ticketQuantity;
-    private BigDecimal ticketPrice;
-    private JButton confirmButton;
-    private Seats[][] seatObjects;
-    private MainFrame mainFrame;
+    private BigDecimal ticketPrice;  
+    private JButton confirmButton;  
+    private Seats[][] seatObjects;   
+    private MainFrame mainFrame;   
     private Consumer<List<String>> seatSelectionListener;
 
+    
     public Seat_GUI(Rooms room, int showtimeID, int ticketQuantity, BigDecimal ticketPrice, MainFrame mainFrame) throws SQLException {
         this.room = room;
         this.showtimeID = showtimeID;
@@ -52,15 +57,18 @@ public class Seat_GUI extends JPanel implements ActionListener {
         this.seatDAO = new SeatDAO();
         this.seatStatusDAO = new SeatStatusDAO();
         this.selectedSeats = new ArrayList<>();
-        this.seats = new JButton[10][10];
+        this.seats = new JButton[10][10]; 
         this.seatStatus = new boolean[10][10];
         this.seatObjects = new Seats[10][10];
 
+       
         setLayout(new BorderLayout());
 
-        // B: Cải thiện thông báo lỗi và kiểm tra
-        System.out.println("RoomID: " + (room != null ? room.getRoomID() : "null") + 
-                          ", RoomName: " + (room != null ? room.getRoomName() : "null"));
+        //thông tin phòng để kiểm tra
+        // System.out.println("RoomID: " + (room != null ? room.getRoomID() : "null") + 
+        //                   ", RoomName: " + (room != null ? room.getRoomName() : "null"));
+        
+        // Kiểm tra dữ liệu phòng; hiển thị lỗi và quay lại màn hình trước nếu không hợp lệ
         if (room == null || room.getRoomID() <= 0) {
             String errorMessage = "Phòng chiếu không hợp lệ (RoomID: " + (room != null ? room.getRoomID() : "null") + 
                                  ", RoomName: " + (room != null ? room.getRoomName() : "null") + 
@@ -78,6 +86,7 @@ public class Seat_GUI extends JPanel implements ActionListener {
             return;
         }
 
+        // Khung "SCREEN"
         JLabel lblScreen = new JLabel("SCREEN", SwingConstants.CENTER);
         lblScreen.setFont(new Font("Times new roman", Font.BOLD, 16));
         lblScreen.setOpaque(true);
@@ -85,13 +94,17 @@ public class Seat_GUI extends JPanel implements ActionListener {
         lblScreen.setPreferredSize(new Dimension(600, 50));
         add(lblScreen, BorderLayout.NORTH);
 
+        // Tạo panel cho lưới ghế
         JPanel pnlSeat = new JPanel();
         pnlSeat.setLayout(new GridLayout(11, 11, 5, 5));
 
         String[] rowLabels = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J"};
 
+        // Lấy danh sách ghế
         List<Seats> seatList = seatDAO.getSeatsByRoom(room);
-        System.out.println("Seat list size for RoomID " + room.getRoomID() + ": " + seatList.size());
+        // System.out.println("Kích thước danh sách ghế cho RoomID " + room.getRoomID() + ": " + seatList.size());
+        
+        //Không tìm thấy ghế cho phòng
         if (seatList.isEmpty()) {
             String errorMessage = "Không tìm thấy ghế cho phòng này!\n" +
                                  "Phòng: " + room.getRoomName() + " (ID: " + room.getRoomID() + ")\n" +
@@ -109,39 +122,45 @@ public class Seat_GUI extends JPanel implements ActionListener {
             return;
         }
 
+        // Khởi tạo trạng thái ghế cho suất chiếu
         seatStatusDAO.initializeSeatsForShowtime(showtimeID, seatList);
 
+        // Tạo các nút ghế và nhãn hàng
         for (int row = 0; row < 10; row++) {
             String rowLabelText = rowLabels[row];
             JLabel rowLabel = new JLabel(rowLabelText, SwingConstants.CENTER);
             pnlSeat.add(rowLabel);
 
             for (int col = 0; col < 10; col++) {
+                // Tạo nhãn ghế
                 String seatLabel = rowLabelText + String.valueOf(col + 1);
                 JButton seat = new JButton(seatLabel);
                 seat.setPreferredSize(new Dimension(40, 40));
                 seat.setFont(new Font("Times new roman", Font.PLAIN, 10));
 
+                // Tìm đối tượng ghế tương ứng trong danh sách ghế
                 Seats currentSeat = seatList.stream()
                         .filter(s -> s.getSeatNumber().equalsIgnoreCase(seatLabel))
                         .findFirst()
                         .orElse(null);
 
+                // Cấu hình nút ghế dựa trên trạng thái
                 if (currentSeat != null) {
                     boolean isBooked = seatStatusDAO.isSeatBooked(currentSeat.getSeatID(), showtimeID);
-                    System.out.println("Seat: " + seatLabel + ", SeatID: " + currentSeat.getSeatID() + ", Booked: " + isBooked);
+                    // System.out.println("Ghế: " + seatLabel + ", SeatID: " + currentSeat.getSeatID() + ", Đã đặt: " + isBooked);
                     if (isBooked) {
-                        seat.setBackground(Color.RED);
+                        seat.setBackground(Color.RED); // Ghế đã đặt màu đỏ và vô hiệu hóa
                         seat.setEnabled(false);
                     } else {
-                        seat.setBackground(Color.WHITE);
+                        seat.setBackground(Color.WHITE); // Ghế trống màu trắng và kích hoạt
                         seat.setEnabled(true);
                     }
                 } else {
-                    seat.setBackground(Color.RED);
+                    seat.setBackground(Color.RED); // Ghế không tồn tại màu đỏ và vô hiệu hóa
                     seat.setEnabled(false);
                 }
 
+                // Lưu nút ghế và đối tượng
                 seats[row][col] = seat;
                 seatObjects[row][col] = currentSeat;
                 seatStatus[row][col] = false;
@@ -150,14 +169,17 @@ public class Seat_GUI extends JPanel implements ActionListener {
             }
         }
 
+        // Thêm nhãn (1 đến 10) ở phía dưới
         pnlSeat.add(new JLabel(""));
         for (int col = 0; col < 10; col++) {
             JLabel colLabel = new JLabel(String.valueOf(col + 1), SwingConstants.CENTER);
             pnlSeat.add(colLabel);
         }
 
+        // Thêm panel ghế vào giữa bố cục
         add(pnlSeat, BorderLayout.CENTER);
 
+        // Tạo và cấu hình panel nút xác nhận ở phía dưới
         JPanel pnlConfirm = new JPanel();
         confirmButton = new JButton("Xác nhận");
         confirmButton.addActionListener(this);
@@ -165,19 +187,23 @@ public class Seat_GUI extends JPanel implements ActionListener {
         add(pnlConfirm, BorderLayout.SOUTH);
     }
 
+    // Thiết lập trình lựa chọn ghế
     public void setSeatSelectionListener(Consumer<List<String>> listener) {
         this.seatSelectionListener = listener;
     }
 
+    // Xử lý sự kiện khi nhấn nút (chọn ghế hoặc xác nhận)
     @Override
     public void actionPerformed(ActionEvent e) {
         Object source = e.getSource();
 
+        // Xử lý nhấn nút xác nhận
         if (source == confirmButton) {
             handleConfirmAction();
             return;
         }
 
+        // Xử lý nhấn nút ghế
         JButton clickedSeat = (JButton) source;
         for (int row = 0; row < 10; row++) {
             for (int col = 0; col < 10; col++) {
@@ -185,14 +211,16 @@ public class Seat_GUI extends JPanel implements ActionListener {
                     Seats seat = seatObjects[row][col];
                     if (seat != null && clickedSeat.isEnabled()) {
                         if (!seatStatus[row][col]) {
+                            // Chọn ghế nếu chưa đủ số lượng vé
                             if (selectedSeats.size() < ticketQuantity) {
-                                clickedSeat.setBackground(Color.GREEN);
+                                clickedSeat.setBackground(Color.GREEN); // Ghế được chọn màu xanh lá
                                 seatStatus[row][col] = true;
                                 selectedSeats.add(seat);
                             } else {
                                 JOptionPane.showMessageDialog(this, "Bạn đã chọn đủ số ghế!", "Thông báo", JOptionPane.WARNING_MESSAGE);
                             }
                         } else {
+                            // Bỏ chọn ghế
                             clickedSeat.setBackground(Color.WHITE);
                             seatStatus[row][col] = false;
                             selectedSeats.remove(seat);
@@ -204,20 +232,25 @@ public class Seat_GUI extends JPanel implements ActionListener {
         }
     }
 
+    //Nhấn nút xác nhận
     private void handleConfirmAction() {
+        // Kiểm tra xem đã chọn đúng số lượng ghế chưa
         if (selectedSeats.size() != ticketQuantity) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn đúng " + ticketQuantity + " ghế!", "Lỗi", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
         try {
+            // Cập nhật trạng thái ghế thành "Booked" trong dbs
             for (Seats seat : selectedSeats) {
                 seatStatusDAO.updateSeatStatus(showtimeID, seat.getSeatID(), "Booked");
             }
+            // Chuẩn bị danh sách nhãn ghế đã chọn
             List<String> seatLabels = new ArrayList<>();
             for (Seats seat : selectedSeats) {
                 seatLabels.add(seat.getSeatNumber());
             }
+            // Thông báo cho trình nghe về các ghế được chọn
             if (seatSelectionListener != null) {
                 seatSelectionListener.accept(seatLabels);
             }
@@ -226,6 +259,7 @@ public class Seat_GUI extends JPanel implements ActionListener {
             return;
         }
 
+        // Hỏi người dùng có muốn chọn đồ ăn không
         int choice = JOptionPane.showConfirmDialog(
                 this,
                 "Bạn có muốn chọn đồ ăn không?",
@@ -233,17 +267,18 @@ public class Seat_GUI extends JPanel implements ActionListener {
                 JOptionPane.YES_NO_OPTION
         );
         if (choice == JOptionPane.YES_OPTION) {
+            // Chuyển đến màn hình chọn đồ ăn
             ProductSelectionGUI pss = new ProductSelectionGUI(mainFrame, showtimeID, ticketQuantity, ticketPrice, selectedSeats, room);
             mainFrame.showScreen("ProductSelection", pss);
         } else {
-            // Lấy thông tin user từ MainFrame (giả sử MainFrame có phương thức getCurrentUser)
+            //Đến màn hình xác nhận mà không chọn đồ ăn
             Users user = mainFrame.getUser();
             if (user == null) {
                 JOptionPane.showMessageDialog(this, "Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
-            // Lấy thông tin Showtimes từ showtimeID
+            // Lấy thông tin suất chiếu từ cơ sở dữ liệu
             Showtimes_DAO showtimeDAO = new Showtimes_DAO(mainFrame.getConnection());
             Showtimes showtime;
             try {
@@ -256,10 +291,10 @@ public class Seat_GUI extends JPanel implements ActionListener {
                 return;
             }
 
-            // Tạo danh sách cart (List<Product_Orders>) rỗng nếu không chọn đồ ăn
+            // Tạo giỏ hàng rỗng nếu không chọn đồ ăn
             List<Product_Orders> cart = new ArrayList<Product_Orders>();
 
-            // Sửa constructor của ConfirmationGUI để bao gồm tham số Rooms
+            // Chuyển đến màn hình xác nhận
             ConfirmationGUI cs = new ConfirmationGUI(
                 mainFrame, 
                 user, 
@@ -268,7 +303,7 @@ public class Seat_GUI extends JPanel implements ActionListener {
                 selectedSeats, 
                 ticketQuantity, 
                 ticketPrice,
-                room // Thêm tham số Rooms
+                room
             );
             mainFrame.showScreen("Confirmation", cs);
         }

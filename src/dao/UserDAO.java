@@ -5,62 +5,73 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+// Import các lớp cần thiết để làm việc với cơ sở dữ liệu
 import dbs.connectDB;
 import model.Users;
 
 public class UserDAO {
-    private final Connection con;
+    private final Connection con; 
 
+    //LLấy kết nối từ connectDB
     public UserDAO() {
         this.con = connectDB.getConnection();
     }
 
+    //CCho phép truyền vào một Connection từ bên ngoài
     public UserDAO(Connection conn) {
         this.con = conn;
     }
 
+    //Kiểm tra xem kết nối
     private void ensureConnection() throws SQLException {
         if (con == null || con.isClosed()) {
             throw new SQLException("Kết nối cơ sở dữ liệu không khả dụng.");
         }
     }
 
-    // Đăng nhập người dùng (gọi stored procedure sp_LoginUser)
+    // Phương thức để người dùng đăng nhập bằng username và password
     public Users loginUser(String username, String password) throws SQLException {
-        ensureConnection();
+        ensureConnection(); // Kiểm tra kết nối
 
         Users user = null;
         String query = "{CALL sp_LoginUser(?, ?)}";
+        
         try (CallableStatement stmt = con.prepareCall(query)) {
+        
             stmt.setString(1, username);
             stmt.setString(2, password);
+
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
+                    // Nếu user tồn tại -> tạo Users từ ResultSet
                     user = createUserFromResultSet(rs);
-                    // Log để kiểm tra giá trị fullName
-                    System.out.println("User FullName from DB in UserDAO: " + user.getFullName());
-                    System.out.println("User UserName from DB in UserDAO: " + user.getUserName());
+                   
                 } else {
-                    System.out.println("No user found for username in UserDAO: " + username);
+        
+                    System.out.println("Không tìm thấy người dùng nào có tên đăng nhập là: " + username);
                 }
             }
         } catch (SQLException e) {
             System.err.println("Error in loginUser: " + e.getMessage());
             throw e;
         }
+
+        
         return user;
     }
 
-    // Helper method to create User object from ResultSet
+    //Tạo Users từ dữ liệu ResultSet
     private Users createUserFromResultSet(ResultSet rs) throws SQLException {
         Users user = new Users();
+
         user.setUserID(rs.getInt("userID"));
         user.setUserName(rs.getString("username"));
-        String fullName = rs.getString("fullName"); // Sửa từ FULLNAME thành fullName (viết thường)
-        System.out.println("FullName directly from ResultSet in UserDAO: " + fullName); // Log kiểm tra
+        String fullName = rs.getString("fullName");
         user.setFullName(fullName);
         user.setPasswordHash(rs.getString("passwordHash"));
+        
         user.setRoleID(rs.getInt("roleID"));
-        return user;
+
+        return user; 
     }
 }
